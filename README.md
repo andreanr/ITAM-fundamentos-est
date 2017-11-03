@@ -4,6 +4,12 @@ Datos para el trabajo final de curso EST-46111 Fundamentos de Estadística
 
 -----------------------------------------------------------------------
 
+# Datos
+
+https://archive.ics.uci.edu/ml/machine-learning-databases/diabetes/diabetes-data.tar.Z
+
+-----------------------------------------------------------------------
+
 # Description
 
 This directory contain a data set prepared for the use of participants
