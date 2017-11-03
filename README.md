@@ -58,7 +58,7 @@ Diabetes patient records were obtained from two sources: an automatic electronic
 
 Diabetes files consist of four fields per record. Each field is separated by a tab and each record is separated by a newline.
 
-# File Names and format:
+## File Names and format:
 
 (1) Date in MM-DD-YYYY format
 
