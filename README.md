@@ -13,10 +13,15 @@ Los datos `diabetes-data.csv` contienen la información de medición de glucosa 
 de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).
 
 El contenido y formato de los datos es el siguiente:
+
 a) Fecha (`date`) en formato `MM-DD-YYYY`
+
 b) Hora (`time`) en formato `XX:YY`
+
 c) Código (`code`)
+
 d) Nivel de glucosa (`value`)
+
 e) Indicadora de paciente (`individual`)
 
 Los datos de concentración en la sangre se obtienen de dos fuentes:
