@@ -1,4 +1,4 @@
-# Fundamentos de Estadístcia (ES46111_datos)
+# Fundamentos de Estadístcia (EST-46111)
 
 Otoño 2017
 
@@ -9,87 +9,65 @@ Datos para el trabajo final de curso EST-46111 Fundamentos de Estadística
 
 ## Descripción
 
-* `diabetes-data.csv` contiene la información de medición de glucosa en la sangre
-de 70 pacientes con diabetes observados en diferentes momentos (horas, días, semanas, meses).
+Los datos `diabetes-data.csv` contienen la información de medición de glucosa en la sangre
+de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).
 
+El contenido y formato de los datos es el siguiente:
+a) Fecha (`date`) en formato `MM-DD-YYYY`
+b) Hora (`time`) en formato `XX:YY`
+c) Código (`code`)
+d) Nivel de glucosa (`value`)
+e) Indicadora de paciente (`individual`)
 
------------------------------------------------------------------------
+Los datos de concentración en la sangre se obtienen de dos fuentes:
+1. Mediciones electrónicas automáticas
+2. Registros escritos en papel.
 
-# 
------------------------------------------------------------------------
+Las mediciones eletrónicas automáticas se obtienen con etiquetas de tiempo específicas, mientras que las mediciones obtenidas de los registros escritos corresponden a horarios ficticios con la siguiente relación: Desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00). 
 
-# Data Set Information:
+El campo `code` corresponde al tipo de insulina administrada al paciente. 
 
-Diabetes patient records were obtained from two sources: an automatic electronic recording device and paper records. The automatic device had an internal clock to timestamp events, whereas the paper records only provided "logical time" slots (breakfast, lunch, dinner, bedtime). For paper records, fixed times were assigned to breakfast (08:00), lunch (12:00), dinner (18:00), and bedtime (22:00). Thus paper records have fictitious uniform recording times whereas electronic records have more realistic time stamps.
+33 = dosis de insulina regular
 
-Diabetes files consist of four fields per record. Each field is separated by a tab and each record is separated by a newline.
+34 = dosis de insulina *NPH*
 
-## File Names and format:
+35 = dosis de insulina *UltraLente*
 
-(1) Date in MM-DD-YYYY format
+48 = medición de glucosa en sangre no especificada
 
-(2) Time in XX:YY format
+57 = medición de glucosa en sangre no especificada
 
-(3) Code
+58 = medición de glucosa en sangre antes del desayuno
 
-(4) Value
+59 = medición de glucosa en sangre después del desayuno
 
-The Code field is deciphered as follows:
+60 = medición de glucosa en sangre antes del almuerzo
 
-33 = Regular insulin dose
+61 = medición de glucosa en sangre después del almuerzo
 
-34 = NPH insulin dose
+62 = medición de glucosa en sangre antes de la cena
 
-35 = UltraLente insulin dose
+63 = medición de glucosa en sangre después de la cena
 
-48 = Unspecified blood glucose measurement
+64 = medición de glucosa en sangre antes del aperitivo
 
-57 = Unspecified blood glucose measurement
+65 = síntomas de hipoglucemia
 
-58 = Pre-breakfast blood glucose measurement
+66 = ingestión típica de comida
 
-59 = Post-breakfast blood glucose measurement
+67 = ingestión de comida mayor de lo habitual
 
-60 = Pre-lunch blood glucose measurement
+68 = ingestión de comida menor de lo usual
 
-61 = Post-lunch blood glucose measurement
+69 = actividad típica de ejercicio
 
-62 = Pre-supper blood glucose measurement
+70 = actividad de ejercicio mayor de lo habitual
 
-63 = Post-supper blood glucose measurement
+71 = actividad de ejercicio menor de lo habitual
 
-64 = Pre-snack blood glucose measurement
+72 = evento especial no especificado
 
-65 = Hypoglycemic symptoms
-
-66 = Typical meal ingestion
-
-67 = More-than-usual meal ingestion
-
-68 = Less-than-usual meal ingestion
-
-69 = Typical exercise activity
-
-70 = More-than-usual exercise activity
-
-71 = Less-than-usual exercise activity
-
-72 = Unspecified special event
-
-
-## Attribute Information:
-
-Diabetes files consist of four fields per record. Each field is separated by a tab and each record is separated by a newline.
-
-File Names and format:
-
-(1) Date in MM-DD-YYYY format
-
-(2) Time in XX:YY format
-
-(3) Code
-
-(4) Value
+**Nota:** La información de la adminitración de insulina, en este momento, es irrelevante.
 
 -----------------------------------------------------------------------
 
