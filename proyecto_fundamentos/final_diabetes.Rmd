@@ -1,0 +1,62 @@
+---
+title: "fundamentos"
+output: html_document
+---
+$y_{ij}$ ~ $Ga(y|\alpha, \beta)$
+i - individuo i =1, ..., 70
+j - mediciones para cada individuo i
+y - concentración de glucosa en la sangre
+
+$\alpha, \beta$ desconocidas
+
+
+
+Los datos diabetes-data.csv contienen la información de medición de glucosa en la sangre de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).
+
+El contenido y formato de los datos es el siguiente:
+
+a) Fecha (date) en formato MM-DD-YYYY
+b) Hora (time) en formato XX:YY
+c) Código (code)
+d) Nivel de glucosa (value)
+e) Indicadora de paciente (individual)
+
+Los datos de concentración en la sangre se obtienen de dos fuentes:
+
+Mediciones electrónicas automáticas
+Registros escritos en papel.
+Las mediciones eletrónicas automáticas se obtienen con etiquetas de tiempo específicas, mientras que las mediciones obtenidas de los registros *escritos* corresponden a *horarios ficticios* con la siguiente relación: Desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00).
+
+El campo code corresponde al tipo de insulina administrada al paciente.
+
+Nota: La información de la adminitración de insulina, en este momento, es irrelevante.
+
+```{r}
+library(tidyverse)
+library(readr)
+
+# Lectura de datos
+diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
+  X1 = col_integer(),
+  date = col_character(),
+  time = col_time(format = ""),
+  code = col_integer(),
+  value = col_character(),
+  individual = col_integer())) %>% 
+  select(-X1)
+
+# Catalogo de codigos
+catalogo_code <- read_csv("docs/catalogo_code.csv")
+
+```
+
+
+```{r}
+# Base de datos 
+bd_diabetes <- diabetes %>% 
+  left_join(catalogo_code)
+
+summary(bd_diabetes)
+glimpse(bd_diabetes)
+```
+
