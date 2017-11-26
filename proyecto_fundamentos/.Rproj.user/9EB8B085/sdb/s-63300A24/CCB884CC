@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : ".Rproj.user\n.Rhistory\n.RData\n.Ruserdata\n",
+    "created" : 1511721459230.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "369326322",
+    "id" : "CCB884CC",
+    "lastKnownWriteTime" : 1511721047,
+    "last_content_update" : 1511721047,
+    "path" : "~/Documents/ITAM/fundamentos_estadistica/final/.gitignore",
+    "project_path" : null,
+    "properties" : {
+    },
+    "relative_order" : 3,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "gitignore"
+}

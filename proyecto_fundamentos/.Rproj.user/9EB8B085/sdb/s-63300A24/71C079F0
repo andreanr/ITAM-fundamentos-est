@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "\"code\",\"atributo\"\n33,\" dosis de insulina regular\"\n34,\" dosis de insulina NPH\"\n35,\" dosis de insulina UltraLente\"\n48,\" medición de glucosa en sangre no especificada\"\n57,\" medición de glucosa en sangre no especificada\"\n58,\" medición de glucosa en sangre antes del desayuno\"\n59,\" medición de glucosa en sangre después del desayuno\"\n60,\" medición de glucosa en sangre antes del almuerzo\"\n61,\" medición de glucosa en sangre después del almuerzo\"\n62,\" medición de glucosa en sangre antes de la cena\"\n63,\" medición de glucosa en sangre después de la cena\"\n64,\" medición de glucosa en sangre antes del aperitivo\"\n65,\" síntomas de hipoglucemia\"\n66,\" ingestión típica de comida\"\n67,\" ingestión de comida mayor de lo habitual\"\n68,\" ingestión de comida menor de lo usual\"\n69,\" actividad típica de ejercicio\"\n70,\" actividad de ejercicio mayor de lo habitual\"\n71,\" actividad de ejercicio menor de lo habitual\"\n72,\" evento especial no especificado\"\n",
+    "created" : 1511721369226.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "4114833659",
+    "id" : "71C079F0",
+    "lastKnownWriteTime" : 1511721007,
+    "last_content_update" : 1511721007,
+    "path" : "~/Documents/ITAM/fundamentos_estadistica/final/proyecto_fundamentos/docs/catalogo_code.csv",
+    "project_path" : "docs/catalogo_code.csv",
+    "properties" : {
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "text"
+}

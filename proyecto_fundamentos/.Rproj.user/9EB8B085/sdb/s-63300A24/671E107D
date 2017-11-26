@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "---\ntitle: \"fundamentos\"\noutput: html_document\n---\n$y_{ij}$ ~ $Ga(y|\\alpha, \\beta)$\ni - individuo i =1, ..., 70\nj - mediciones para cada individuo i\ny - concentración de glucosa en la sangre\n\n$\\alpha, \\beta$ desconocidas\n\n\n\nLos datos diabetes-data.csv contienen la información de medición de glucosa en la sangre de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).\n\nEl contenido y formato de los datos es el siguiente:\n\na) Fecha (date) en formato MM-DD-YYYY\nb) Hora (time) en formato XX:YY\nc) Código (code)\nd) Nivel de glucosa (value)\ne) Indicadora de paciente (individual)\n\nLos datos de concentración en la sangre se obtienen de dos fuentes:\n\nMediciones electrónicas automáticas\nRegistros escritos en papel.\nLas mediciones eletrónicas automáticas se obtienen con etiquetas de tiempo específicas, mientras que las mediciones obtenidas de los registros *escritos* corresponden a *horarios ficticios* con la siguiente relación: Desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00).\n\nEl campo code corresponde al tipo de insulina administrada al paciente.\n\nNota: La información de la adminitración de insulina, en este momento, es irrelevante.\n\n```{r}\nlibrary(tidyverse)\nlibrary(readr)\n\n# Lectura de datos\ndiabetes <- read_csv(\"datos/data_diabetes.csv\", col_types = list(\n  X1 = col_integer(),\n  date = col_character(),\n  time = col_time(format = \"\"),\n  code = col_integer(),\n  value = col_character(),\n  individual = col_integer())) %>% \n  select(-X1)\n\n# Catalogo de codigos\ncatalogo_code <- read_csv(\"docs/catalogo_code.csv\")\n\n```\n\n\n```{r}\n# Base de datos \nbd_diabetes <- diabetes %>% \n  left_join(catalogo_code)\n\nsummary(bd_diabetes)\nglimpse(bd_diabetes)\n```\n\n",
+    "created" : 1511721289903.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2460966707",
+    "id" : "671E107D",
+    "lastKnownWriteTime" : 1511721662,
+    "last_content_update" : 1511721662486,
+    "path" : "~/Documents/ITAM/fundamentos_estadistica/final/proyecto_fundamentos/final_diabetes.Rmd",
+    "project_path" : "final_diabetes.Rmd",
+    "properties" : {
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_markdown"
+}

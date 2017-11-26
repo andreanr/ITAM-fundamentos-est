@@ -1,0 +1,8 @@
+"0","catalogo_code <- read_csv(""docs/catalogo_code.csv"")
+"
+"2","Parsed with column specification:
+cols(
+  code = col_integer(),
+  atributo = col_character()
+)
+"
