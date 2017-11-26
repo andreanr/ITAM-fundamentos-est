@@ -1,0 +1,20 @@
+{
+    "collab_server" : "",
+    "contents" : "# Function to do the slice sampling updates.  \nuni.slice.updates <- function (x0, g, reuse=FALSE){ \n  uni.slice.calls <- 0\n  uni.slice.evals <- 0\n  \n  s <<- numeric(ss)\n  x1 <- x0\n  s[1] <<- x0\n  last.g <- NULL\n  \n  for (i in 2:ss)\n  { for (j in 1:thin)\n  { if (reuse)\n  { x1 <- uni.slice (x1, g, w=w, m=m, lower=lower, upper=upper, \n                     gx0=last.g)\n  last.g <- attr(x1,\"log.density\")\n  uni.slice.calls <- uni.slice.calls + attr(x1,\"uni.slice.calls\")\n  uni.slice.evals <- uni.slice.evals + attr(x1,\"uni.slice.evals\")\n  }\n    else\n    { x1 <- uni.slice (x1, g, w=w, m=m, lower=lower, upper=upper)\n    }\n  }\n    s[i] <<- x1\n  }\n}\n",
+    "created" : 1511720509892.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "3368234672",
+    "id" : "CF154B49",
+    "lastKnownWriteTime" : 1511720286,
+    "last_content_update" : 1511720286,
+    "path" : "/Volumes/MGA/proyecto_fundamentos/est46111_datos/Auxiliar/uni.slice.updates.R",
+    "project_path" : "est46111_datos/Auxiliar/uni.slice.updates.R",
+    "properties" : {
+    },
+    "relative_order" : 5,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

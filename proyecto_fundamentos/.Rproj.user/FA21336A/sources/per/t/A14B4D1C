@@ -1,0 +1,23 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1511649243841.000,
+    "dirty" : false,
+    "encoding" : "UTF-8",
+    "folds" : "",
+    "hash" : "2464609573",
+    "id" : "A14B4D1C",
+    "lastKnownWriteTime" : 1511651235,
+    "last_content_update" : 1511651235189,
+    "path" : "~/Desktop/proyecto_fundamentos/scr/01_eda.R",
+    "project_path" : "scr/01_eda.R",
+    "properties" : {
+        "cursorPosition" : "23,0",
+        "scrollLine" : "0",
+        "tempName" : "Untitled1"
+    },
+    "relative_order" : 1,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_source"
+}

@@ -1,0 +1,29 @@
+{
+    "collab_server" : "",
+    "contents" : "",
+    "created" : 1511650328963.000,
+    "dirty" : false,
+    "encoding" : "",
+    "folds" : "",
+    "hash" : "0",
+    "id" : "AF6B2750",
+    "lastKnownWriteTime" : 34359738374,
+    "last_content_update" : 1511650328963,
+    "path" : null,
+    "project_path" : null,
+    "properties" : {
+        "cacheKey" : "721FA260",
+        "caption" : "base_diabetes",
+        "contentUrl" : "grid_resource/gridviewer.html?env=&obj=base_diabetes&cache_key=721FA260",
+        "displayedObservations" : 29264,
+        "environment" : "",
+        "object" : "base_diabetes",
+        "preview" : 0,
+        "totalObservations" : 29264,
+        "variables" : 7
+    },
+    "relative_order" : 2,
+    "source_on_save" : false,
+    "source_window" : "",
+    "type" : "r_dataframe"
+}
