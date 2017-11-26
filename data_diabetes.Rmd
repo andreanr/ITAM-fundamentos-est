@@ -1,0 +1,84 @@
+---
+title: "Diabetes Data"
+author: "Juan Carlos Martinez-Ovando"
+date: "Otoño 2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+rm(list=ls())
+```
+
+## Datos
+
+```{r diabetes}
+datos <- read.csv(file="data_diabetes.csv", 
+                  header = TRUE)
+summary(datos)
+
+datos$value <- as.numeric(datos$value)
+
+attr(datos, "names")
+
+summary(datos$value)
+
+value <- as.matrix(datos$value) 
+```
+
+## Modelo
+
+Suponemos que `value` corresponde a las observaciones de la ariable aleatoria $Y$, la cual puede describirse con el modelo
+\begin{eqnarray}
+  Y_j | \alpha,\beta & \sim & Ga(y|\alpha,\beta) \\
+  (\alpha,\beta) & \sim & Ga(\alpha|a_{\alpha},b_{\alpha})
+                          Ga(\theta|a_{\theta},b_{\theta}),
+\end{eqnarray}
+para $j=1.\ldots,J$, considerando que $a_{\cdot}$ y $b_{\cdot}$ son hiperpar\'ametros fijos.
+
+## Algoritmo
+
+### Funciones Auxiliares
+
+Slice sampler
+```{r}
+source("Auxiliar/uni.slice.R")
+```
+
+### Code
+```{r function}
+a_alpha <- 1
+b_alpha <- 1
+a_theta <- 1
+b_theta <- 1
+mcmc.M <- 10
+
+uni.slice.calls <- 0
+uni.slice.evals <- 0
+
+gamma.post.mcmc <- function(value,a_alpha,b_alpha,a_theta,b_theta,mcmc.M){
+  n <- dim(value)[1]
+  mcmc.sim <- array(NA,dim=c(mcmc.M,2))
+  # Initial values for MCMC sampling
+  alpha_aux <- 1
+  theta_aux <- 1
+  # Run MCMC sampler
+  m <- 1
+  for(m in 1:mcmc.M){
+    # Full posterior "alpha"
+    # Full posterior "theta"
+    theta_aux <- rgamma(1, shape = a_alpha + n, 
+                        scale = b_alpha + sum(value))
+    # Storing
+    mcmc.sim[m,1] <- alpha_aux
+    mcmc.sim[m,2] <- theta_aux
+  }
+  return(mcmc.sim)
+}
+
+mcmc.sim <- gamma.post.mcmc(value,a_alpha,b_alpha,a_theta,b_theta,mcmc.M)
+summary(mcmc.sim)
+plot(mcmc.sim)
+hist(mcmc.sim[,1])
+hist(mcmc.sim[,2])
+```
