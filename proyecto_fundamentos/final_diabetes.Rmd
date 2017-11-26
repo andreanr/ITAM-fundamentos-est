@@ -34,6 +34,9 @@ Nota: La información de la adminitración de insulina, en este momento, es irre
 ```{r}
 library(tidyverse)
 library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
 
 # Lectura de datos
 diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
@@ -41,7 +44,7 @@ diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
   date = col_character(),
   time = col_time(format = ""),
   code = col_integer(),
-  value = col_character(),
+  value = col_double(),
   individual = col_integer())) %>% 
   select(-X1)
 
@@ -58,5 +61,32 @@ bd_diabetes <- diabetes %>%
 
 summary(bd_diabetes)
 glimpse(bd_diabetes)
+```
+
+2. ¿ Existe discrepancia entre las mediciones de glucosa de los pacientes entre las cuatro horas del día
+donde se miden?
+
+
+```{r}
+mediciones_4 <- bd_diabetes %>%
+  filter(str_detect(atributo, "medición")) %>% 
+  filter(hour(time) %in% c(8, 12, 18, 22), minute(time) == 0, second(time) == 0)
+
+ggplot(mediciones_4) +
+  geom_boxplot(aes(x = atributo, y = value, color = atributo)) + 
+  facet_grid(~as.factor(hour(time))) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank()) +
+  ggtitle("Medición de glucosa en sangre")
+
+
+ggplot(mediciones_4) +
+  geom_boxplot(aes(x = "1", y = value, color = as.factor(hour(time)))) + 
+  facet_grid(~as.factor(hour(time))) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank()) +
+  ggtitle("Medición de glucosa en sangre")
 ```
 
