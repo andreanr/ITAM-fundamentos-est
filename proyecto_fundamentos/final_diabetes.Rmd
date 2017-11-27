@@ -50,6 +50,7 @@ library(stringr)
 library(lubridate)
 library(ggplot2)
 
+theme_set(theme_bw())
 # Lectura de datos
 diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
   X1 = col_integer(),
@@ -170,5 +171,28 @@ ggplot(base_dosis_med, aes(x = dosis, y = medición)) +
                shape=18, size=3, show.legend = FALSE) + 
   scale_x_discrete(name = "Dosis incluida") +
   ggtitle("Boxplot mediciones de glucosa") 
+```
+
+5. ¿Existe una discrepancia clara entre los pacientes que reportan sus niveles de glocosa depués de haber ingerido más alimentos de lo usual?
+
+```{r}
+base_ingesta <- bd_diabetes %>% 
+  mutate(hora = hour(time)) %>% 
+  filter(atributo %in% c(atributo[str_detect(atributo, "medición")], atributo[str_detect(atributo, "ingestión de comida mayor")]),
+         !is.na(atributo)) %>% 
+  mutate(tipo = ifelse(str_detect(atributo,"medición"), "medicion", "ingesta")) %>% 
+  group_by(date, individual, tipo) %>% 
+  summarise(media_glucosa = mean(value)) %>% 
+  spread(tipo, media_glucosa, fill = 1) %>% 
+  ungroup() 
+
+ggplot(base_ingesta, aes(x = as.factor(ingesta), y = medicion, color = as.factor(ingesta))) +
+  geom_boxplot(color = c("#42f4c5","#41cdf4")) +
+  stat_summary(fun.y=mean, colour="darkred", geom="point", 
+               shape=18, size=3) + 
+  scale_color_manual(name = "Ingesta", values = c("Sí", "No")) +
+  labs(title = "Boxplot mediciones de glucosa", x = "Ingesta mayor a lo usal",
+       y = "nivel de glucosa") 
+  
 ```
 
