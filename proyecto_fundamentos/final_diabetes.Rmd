@@ -196,3 +196,125 @@ ggplot(base_ingesta, aes(x = as.factor(ingesta), y = medicion, color = as.factor
   
 ```
 
+
+### Modelo pregunta 2
+
+```{r}
+library(R2jags)
+
+prob<-function(x){
+  out<-min(length(x[x>0])/length(x),length(x[x<0])/length(x))
+  out
+}
+
+input_modelo <- mediciones_4 %>% 
+  mutate(time = as.factor(as.character(time))) %>% 
+  filter(!is.na(value))
+
+n <- nrow(input_modelo)
+data <- list("y" = input_modelo$value, "x" = input_modelo$time, "n" = n)
+inits <- function(){list(beta = rep(0,4), alpha = rep(0,n),  yf1 = rep(1,n))}
+parameters <- c("mu", "eta","beta.adj", "alpha.adj", "yf1")
+
+ej2 <- jags(data = data, inits = inits, parameters.to.save = parameters, 
+             model.file = "modelo_gamma.txt", 
+             n.iter = 10000, n.chains = 1, n.burnin = 1000, n.thin = 1)
+
+```
+
++ Simulaciones de los parámetros (nodos)
+
+```{r}
+out_2 <- ej2$BUGSoutput$sims.list
+names(out_2)
+z <- out_2$beta[,1]
+```
+
++ Graficamente
+
+```{r}
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta1")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta1")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta1")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+
+```{r}
+z <- out_2$beta[,2]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta2")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta2")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta2")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+```{r}
+z <- out_2$beta[,3]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta3")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta3")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta3")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+```{r}
+z <- out_2$beta[,4]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta4")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta4")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta4")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
++ Resúmenes estadístico de los parámetros (nodos) monitoreados
+
+```{r}
+out_resumen_2 <- ej2$BUGSoutput$summary
+out_resumen_2[grep("beta", rownames(out_resumen_2)), c(1,3,7)]
+
+```
+
+
+
++ DIC
+
+```{r}
+out_dic_2 <-  ej2$BUGSoutput$DIC
+out_dic_2
+```
+
+
++ R2
+
+```{r}
+out_yf1 <- out_resumen_2[grep("yf1",rownames(out_resumen_2)),1]
+
+r2 <- cor(data$y, out_yf1)^2
+r2
+```
+
++ Devianza
+
+```{r}
+mean(out_2$deviance)
+```
+
++ Gráfica de ajuste
+
+```{r}
+plot(data$y, out_yf1, col =3, pch =16) 
+abline(a=0, b=1 , col = 1, lwd =2)
+grid()
+```
+
+
