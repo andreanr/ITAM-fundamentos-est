@@ -1,7 +1,7 @@
 ---
-title: "Tarea"
-author: "Liz Solis Díaz, Mariana Godina, Andrea Navarrete"
-date: "12/3/2017"
+title: "Examen Parcial 2"
+author: "Elizabeth Solis, Mariana Godina, Andrea Navarrete"
+date: "Otoño 2017"
 output: pdf_document
 ---
 
@@ -72,5 +72,58 @@ $$\lambda(t|\theta) = \mu + \sum_{t_i< t} e^{\beta(m_i - Mr)}\frac{a}{(t-t_i+c)^
 - $a$ : es una constante proporcional de la tasa de réplicas
 - $\beta$ : es la tasa de réplicas con magnitudes superiores a un umbral. Si beta es un valor muy chico, quiere decir que se esperán mayores réplicas superiores a un umbral; mientras que si beta es muy grande, habrá pocas réplicas superiores al mismo umbral.
 - $c$: es una constante de decaimiento en el tiempo
+
+
+**6.** Con base en lo visto en clase, y en la Sección 3 del documento, desarrolla un algoritmo para
+calcular la distribución final de los parámetros. (En este inciso, sólo el diseño del algoritmo
+y cálculo de la distribuciones condicionales completas es relevante, no la implementación del
+código).
+
+
+Dados los datos observados $$\{ t_i, m_i\}_{i=1}N \in [0, T],$$
+$$m_i > M_r \forall i = 1,..., N$$ 
+La distribución final o posterior asociada es 
+$$\pi(\underset{-}{\theta}|\{ t_i, m_i\})  \propto   L_T(\underset{-}{\theta})\pi(\underset{-}{\theta})$$
+
+Ahora, la prior conjunta esta dada por 
+$$\pi(\underset{-}{\theta}) = f(\mu) f(a|\beta, c, p) f(\beta) f(c) f(p)$$
+donde $f(\cdot)$ es la función de densidad marginal del parámetro y $f(\cdot | \cdot)$ es la función de densidad condicional.
+
+Además,
+
+$\mu \sim Ga(\gamma_\mu, \lambda_\mu)$ hace referencia a la secuencia del temblor *principal* o inicial y es independiente de los parámetros $\beta, c, p$ que se refieren a los sismos subsecuentes (réplicas) y se distribuyen *Gamma*:
+
+$\beta \sim Ga(\gamma_\beta, \lambda_\beta)$, describe la magnitud y es independiente de $c, p$ que se refieren al tiempo.
+
+$c \sim Ga(\gamma_c, \lambda_c)$
+
+$p \sim U(0,5)$
+
+$a \sim Ga(\gamma_a, \lambda_a)$ y los hiperparametros $(\gamma_a, \lambda_a)$ dependen de $\beta, c, p$.
+
+
+Ahora bien, la prior $\pi(\underset{-}{\theta})$ incorpora información de los datos antes de 1991 (con base en las mediciones del viejo sistema) y los datos obtenidos después de 1991 están incorporados en la verosimilitud $L_T(\underset{-}{\theta})$ (con base en los datos obtenidos con el nuevo sistema de medición).
+
+De lo anterior, se sabe que $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$ no se puede obtener facilmente analíticamente ya que no es de forma cerrada. Existen métodos de simulación para calcular la distribución posterior conocidos como cadenas de Markov via Montecarlo: *MCMC*.   
+
+En particular, existe el método de *Metropolis*, el cual requiere únicamente que se pueda calcular el producto de la distribución inicial y la verosimilitud de los datos (que ya conocemos y fueron descritos). 
+
+$$\pi(\underset{-}{\theta}) = \frac{1}{5} \lambda_\mu e^{-\lambda_\mu \mu} \lambda_\beta e^{-\lambda_\beta \beta} \lambda_c e^{-\lambda_c c} \lambda_a e^{-\lambda_a a} \frac {(\lambda_\mu \mu)^{\gamma_\mu-1}}{\Gamma(\gamma_\mu)} \frac {(\lambda_\beta \beta)^{\gamma_\beta-1}}{\Gamma(\gamma_\beta)} \frac {(\lambda_c c)^{\gamma_c-1}}{\Gamma(\gamma_c)}  \frac {(\lambda_a a)^{\gamma_a-1}}{\Gamma(\gamma_a)} 
+$$
+
+
+Posteriormente, multiplicar la prior conjunta por la verosimilitud descrita en la ecuación 2.2 del *paper A Bayesian Analysis for the seismic data on Taiwan*
+
+El resultado obtenido es una aproximación de la distribución posterior $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$  a partir de una muestra de $\underset{-}{\theta}$.
+
+
+**8.** Para concluir, describan qué tipo de preguntas podrían ser relevantemente planteadas de manera
+que el modelo provea de una respuesta para ellas. (Consideren al menos dos preguntas).
+
++ La probabilidad de que al menos un sismo ocurra en un par de horas o un intervalo de tiempo en Taiwan.  Es relevante el lugar debido a las  condiciones geográficas y placas tectónicas; además, los datos recopilados son de Taiwan, pues sería ilógico usarlos para predicciones en México por ejemplo.
+
++ Probabilidad de que ocurra al menos un sismo dentro de los siguientes 15 minutos dado que acaba de ocurrir uno, es viable pues sólo sería la predicción de una nueva observación.
+
++ La magnitud del siguiente sismo, es una predicción interesante que puede ser contestada con un rango con cota inferior como $M_T$. Una posible *mejora del modelo*, sería obtener cota inferior y superior pues no es lo mismo predecir un sismo de magnitud mayor a 4.7 (podría ser un terremoto de escal 9.8) que predecir un sismo con magnitud entre 4.7 y 5.
 
 
