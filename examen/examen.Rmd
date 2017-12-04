@@ -131,7 +131,12 @@ En particular, existe el método de *Metropolis*, el cual requiere únicamente q
 $$\pi(\underset{-}{\theta}) = \frac{1}{5} \lambda_\mu e^{-\lambda_\mu \mu} \lambda_\beta e^{-\lambda_\beta \beta} \lambda_c e^{-\lambda_c c} \lambda_a e^{-\lambda_a a} \frac {(\lambda_\mu \mu)^{\gamma_\mu-1}}{\Gamma(\gamma_\mu)} \frac {(\lambda_\beta \beta)^{\gamma_\beta-1}}{\Gamma(\gamma_\beta)} \frac {(\lambda_c c)^{\gamma_c-1}}{\Gamma(\gamma_c)}  \frac {(\lambda_a a)^{\gamma_a-1}}{\Gamma(\gamma_a)}$$
   
   
-  Posteriormente, multiplicar la prior conjunta por la verosimilitud descrita en la ecuación 2.2 del *paper A Bayesian Analysis for the seismic data on Taiwan*
+  Posteriormente, multiplicar la prior conjunta por la verosimilitud descrita en la ecuación 2.2 del *paper A Bayesian Analysis for the seismic data on Taiwan*:
+  
+$$L_T(\underset{-}{\theta}) = e^{log(L_T(\underset{-}{\theta}))}$$ 
+donde, 
+
+$$log(L_T(\underset{-}{\theta})) = log(\mu) + \sum_{n=1}^{\infty} log(\mu + a + \sum_{t_j < t_i} \frac{e^{\beta(\mu_j-M_r)}}{(t_i-t_j+c)^p}) - \mu T - \frac{a}{p-1}$$
   
   El resultado obtenido es una aproximación de la distribución posterior $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$  a partir de una muestra de $\underset{-}{\theta}$.
 
