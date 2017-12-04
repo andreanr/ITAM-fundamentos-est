@@ -9,11 +9,11 @@ output: pdf_document
 knitr::opts_chunk$set(echo = TRUE)
 ```
 **1.** Identifiquen el soporte de las dos sucesiones de variables aleatorias a las que hace referencia
-el documento, i.e. $ \{ t_i, m_i \}_{i=1}^N$ y N.
+el documento, i.e. $\{ t_i, m_i \}_{i=1}^N$ y N.
 
 El soporte de la sucesión de la variable aleatroria  $t_i$ ocurrencias de sismos es de 0 a $\infty$. El soporte de la magnitud del sismo variable aleatoria $m_i$ es $m>4.7$
 
-**2.** La distribución de intensidad referida en la ecuación (1.1) es referida a la variable del número de eventos en el intervalo $[0, *T*]$ (con $T < \inf$), de igual forma la definida por la ecuación (1.2). La función de intensidad o *hazard* se define como la tasa instantánea de cambio de la función de densidad en el tiempo $t$ condicional en que la v.a. es mayor que $t$. Así, la función de densidad $f(t)$ estaría definida como:
+**2.** La distribución de intensidad referida en la ecuación (1.1) es referida a la variable del número de eventos en el intervalo $[0, T]$ (con $T < \inf$), de igual forma la definida por la ecuación (1.2). La función de intensidad o *hazard* se define como la tasa instantánea de cambio de la función de densidad en el tiempo $t$ condicional en que la v.a. es mayor que $t$. Así, la función de densidad $f(t)$ estaría definida como:
 
 $$ \lambda(t) = \frac{f(t)}{S(t)} $$
   donde $1-S(t) = Pr{t \in (0,T]}$. Con base en esto, deriva los pasos necesarios para encontrar la expresión (2.1).
@@ -92,32 +92,34 @@ el tiempo y el efecto de los eventos, por lo tanto se asume independecia entre $
  previa para aliemntar el conocimiento de la distribución inicial. La distribución 
  $a$ es una distribución conjugada gamma-gamma.
 
+
+
 **6.** Con base en lo visto en clase, y en la Sección 3 del documento, desarrolla un algoritmo para
 calcular la distribución final de los parámetros. (En este inciso, sólo el diseño del algoritmo
-y cálculo de la distribuciones condicionales completas es relevante, no la implementación del
-código).
+                                                   y cálculo de la distribuciones condicionales completas es relevante, no la implementación del
+                                                   código).
 
 
 Dados los datos observados $$\{ t_i, m_i\}_{i=1}N \in [0, T],$$
-$$m_i > M_r \forall i = 1,..., N$$ 
-La distribución final o posterior asociada es 
+  $$m_i > M_r \forall i = 1,..., N$$ 
+  La distribución final o posterior asociada es 
 $$\pi(\underset{-}{\theta}|\{ t_i, m_i\})  \propto   L_T(\underset{-}{\theta})\pi(\underset{-}{\theta})$$
-
-Ahora, la prior conjunta esta dada por 
+  
+  Ahora, la prior conjunta esta dada por 
 $$\pi(\underset{-}{\theta}) = f(\mu) f(a|\beta, c, p) f(\beta) f(c) f(p)$$
-donde $f(\cdot)$ es la función de densidad marginal del parámetro y $f(\cdot | \cdot)$ es la función de densidad condicional.
+  donde $f(\cdot)$ es la función de densidad marginal del parámetro y $f(\cdot | \cdot)$ es la función de densidad condicional.
 
 Además,
 
 $\mu \sim Ga(\gamma_\mu, \lambda_\mu)$ hace referencia a la secuencia del temblor *principal* o inicial y es independiente de los parámetros $\beta, c, p$ que se refieren a los sismos subsecuentes (réplicas) y se distribuyen *Gamma*:
-
-$\beta \sim Ga(\gamma_\beta, \lambda_\beta)$, describe la magnitud y es independiente de $c, p$ que se refieren al tiempo.
+  
+  $\beta \sim Ga(\gamma_\beta, \lambda_\beta)$, describe la magnitud y es independiente de $c, p$ que se refieren al tiempo.
 
 $c \sim Ga(\gamma_c, \lambda_c)$
-
-$p \sim U(0,5)$
-
-$a \sim Ga(\gamma_a, \lambda_a)$ y los hiperparametros $(\gamma_a, \lambda_a)$ dependen de $\beta, c, p$.
+  
+  $p \sim U(0,5)$
+  
+  $a \sim Ga(\gamma_a, \lambda_a)$ y los hiperparametros $(\gamma_a, \lambda_a)$ dependen de $\beta, c, p$.
 
 
 Ahora bien, la prior $\pi(\underset{-}{\theta})$ incorpora información de los datos antes de 1991 (con base en las mediciones del viejo sistema) y los datos obtenidos después de 1991 están incorporados en la verosimilitud $L_T(\underset{-}{\theta})$ (con base en los datos obtenidos con el nuevo sistema de medición).
@@ -126,13 +128,12 @@ De lo anterior, se sabe que $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$ no se pued
 
 En particular, existe el método de *Metropolis*, el cual requiere únicamente que se pueda calcular el producto de la distribución inicial y la verosimilitud de los datos (que ya conocemos y fueron descritos). 
 
-$$\pi(\underset{-}{\theta}) = \frac{1}{5} \lambda_\mu e^{-\lambda_\mu \mu} \lambda_\beta e^{-\lambda_\beta \beta} \lambda_c e^{-\lambda_c c} \lambda_a e^{-\lambda_a a} \frac {(\lambda_\mu \mu)^{\gamma_\mu-1}}{\Gamma(\gamma_\mu)} \frac {(\lambda_\beta \beta)^{\gamma_\beta-1}}{\Gamma(\gamma_\beta)} \frac {(\lambda_c c)^{\gamma_c-1}}{\Gamma(\gamma_c)}  \frac {(\lambda_a a)^{\gamma_a-1}}{\Gamma(\gamma_a)} 
-$$
-
-
-Posteriormente, multiplicar la prior conjunta por la verosimilitud descrita en la ecuación 2.2 del *paper A Bayesian Analysis for the seismic data on Taiwan*
-
-El resultado obtenido es una aproximación de la distribución posterior $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$  a partir de una muestra de $\underset{-}{\theta}$.
+$$\pi(\underset{-}{\theta}) = \frac{1}{5} \lambda_\mu e^{-\lambda_\mu \mu} \lambda_\beta e^{-\lambda_\beta \beta} \lambda_c e^{-\lambda_c c} \lambda_a e^{-\lambda_a a} \frac {(\lambda_\mu \mu)^{\gamma_\mu-1}}{\Gamma(\gamma_\mu)} \frac {(\lambda_\beta \beta)^{\gamma_\beta-1}}{\Gamma(\gamma_\beta)} \frac {(\lambda_c c)^{\gamma_c-1}}{\Gamma(\gamma_c)}  \frac {(\lambda_a a)^{\gamma_a-1}}{\Gamma(\gamma_a)}$$
+  
+  
+  Posteriormente, multiplicar la prior conjunta por la verosimilitud descrita en la ecuación 2.2 del *paper A Bayesian Analysis for the seismic data on Taiwan*
+  
+  El resultado obtenido es una aproximación de la distribución posterior $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$  a partir de una muestra de $\underset{-}{\theta}$.
 
 
 **8.** Para concluir, describan qué tipo de preguntas podrían ser relevantemente planteadas de manera
