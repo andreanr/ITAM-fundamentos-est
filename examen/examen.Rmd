@@ -8,6 +8,10 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+**1.** Identifiquen el soporte de las dos sucesiones de variables aleatorias a las que hace referencia
+el documento, i.e. $ \{ t_i, m_i \}_{i=1}^N$ y N.
+
+El soporte de la sucesión de la variable aleatroria  $t_i$ ocurrencias de sismos es de 0 a $\infty$. El soporte de la magnitud del sismo variable aleatoria $m_i$ es $m>4.7$
 
 **2.** La distribución de intensidad referida en la ecuación (1.1) es referida a la variable del número de eventos en el intervalo $[0, *T*]$ (con $T < \inf$), de igual forma la definida por la ecuación (1.2). La función de intensidad o *hazard* se define como la tasa instantánea de cambio de la función de densidad en el tiempo $t$ condicional en que la v.a. es mayor que $t$. Así, la función de densidad $f(t)$ estaría definida como:
 
@@ -73,4 +77,18 @@ $$\lambda(t|\theta) = \mu + \sum_{t_i< t} e^{\beta(m_i - Mr)}\frac{a}{(t-t_i+c)^
 - $\beta$ : es la tasa de réplicas con magnitudes superiores a un umbral. Si beta es un valor muy chico, quiere decir que se esperán mayores réplicas superiores a un umbral; mientras que si beta es muy grande, habrá pocas réplicas superiores al mismo umbral.
 - $c$: es una constante de decaimiento en el tiempo
 
+**5.** Con base en la Sección 2.2 del documento, argumenta si los supuestos sobre los cuales los
+autores proponen la distribución inicial para los parámetros es razonable. Identifica si la
+distribución inicial es del tipo conjugado para alguno de los parámetros involucrados. Discute
+la pertinencia de la ecuación (2.4).
+
+Parámetros: $\underline\theta$ = ($\mu, a, \beta, c, p$) $\mu$ es independiente de 
+($a, \beta, c, p$) por el hecho de que $\mu$ representa los principales shocks y las 
+demás los shocks posteriores. $\beta$ describe la magnitud del efecto y ($c,p$) son
+el tiempo y el efecto de los eventos, por lo tanto se asume independecia entre $\beta$
+ y ($c,p$). $p$ se distribuye uniforme (0, 5). En cambio, $a$ depende de $\beta$, $c$ y $p$.
+ $mu$, $\beta$ y $c$ se distribuyen gamma. $a$ es una distribución gamma con hiperparámetros que dependen de 
+ los valores $\beta$, $c$ y $p$. Estos supuestos son razonables, ya que ocupan información
+ previa para aliemntar el conocimiento de la distribución inicial. La distribución 
+ $a$ es una distribución conjugada gamma-gamma.
 
