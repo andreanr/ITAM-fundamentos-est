@@ -1,0 +1,76 @@
+---
+title: "Tarea"
+author: "Liz Solis Díaz, Mariana Godina, Andrea Navarrete"
+date: "12/3/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+**2.** La distribución de intensidad referida en la ecuación (1.1) es referida a la variable del número de eventos en el intervalo $[0, *T*]$ (con $T < \inf$), de igual forma la definida por la ecuación (1.2). La función de intensidad o *hazard* se define como la tasa instantánea de cambio de la función de densidad en el tiempo $t$ condicional en que la v.a. es mayor que $t$. Así, la función de densidad $f(t)$ estaría definida como:
+
+$$ \lambda(t) = \frac{f(t)}{S(t)} $$
+  donde $1-S(t) = Pr{t \in (0,T]}$. Con base en esto, deriva los pasos necesarios para encontrar la expresión (2.1).
+  
+De la expresión anterior conocida como *hazard rate* se sigue:
+
+$$\lambda(t)  = \frac{f(t)}{S(t)}$$
+$$\lambda(t)  = \frac{f(t)}{1 - F(t)}$$
+
+$$\lambda(t) = -\frac{d}{dt}log[S(t)]$$
+$$\implies \frac{d}{dt}[S(t)] = f(t)$$  
+
+$$ \implies S(t) = e^{{-\int_0^{T}}\lambda(t)dt} $$
+
+De esta forma escribimos la similitud de la siguiente forma:
+
+$$L_{T}(\theta) = \prod_{i=1}^{N}f(t_i | \theta)$$
+$$L_{T}(\theta) = \prod_{i=1}^{N} \lambda(t_i)S(t_i)$$
+
+$$ \implies L_T(\theta) =  \prod_{i=1}^{N} \lambda(t_i) e^{{-\int_0^{T}}\lambda(t)dt} $$
+Sacando logaritmo:
+
+$$\implies  logL_T(\theta) = log[\prod_{i=1}^{N} \lambda(t_i) e^{{-\int_0^{T}}\lambda(t)dt}]$$
+$$\implies  logL_T(\theta) = \sum_{i=1}^{N} log[ \lambda(t_i) e^{{-\int_0^{T}}\lambda(t)dt}]$$
+
+$$\implies  logL_T(\theta) = \sum_{i=1}^{N} log[ \lambda(t_i)] +  log[e^{{-\int_0^{T}}\lambda(t)dt}]$$
+
+$$\implies  logL_T(\theta) = \sum_{i=1}^{N} log[ \lambda(t_i)]   -\int_0^{T}\lambda(t)dt$$
+
+NOTA:
+(Se cambio la función *hazard* por la siguiente función la siguiente, siguiendo la función descrita en el libro: 
+D.J. Daley; D. Vere-Jones. *An Introduction to the Theory of Point Processes, Volume I: Elementary Theory and Methods* (2002), Second Edition. Springer )
+
+
+**3.** Con base en el inciso anterior, identifica los parámetros y espacios parametrales correspondientes al modelo dado por (2.1).
+
+El modelo dado por (2.1) es el siguiente:
+
+$$ logL_T(\theta) =\sum_{i=1}^ {N} log \lambda(t_i;\theta) - \int_{0}^{T}\lambda(t;\theta)dt$$
+
+donde $\theta = (\mu, a, \beta, c, p)$ para M1
+
+El espacio parametral es:
+
+- $\mu \in (0, \inf)$
+- $p \in [1, \inf)$
+- $a > 0$
+- $\beta > 0$
+- $c > 0$
+
+
+**4.** Con base en el inciso anterior, desarrollen interpretaciones para el rol que juegan cada uno de los parámetros del modelo. Para esto, elijan uno entre los modelos M1 y M2 enunciados en el documento.
+
+Con el modelo M1 el rol que juegan cada parámetro es:
+
+$$\lambda(t|\theta) = \mu + \sum_{t_i< t} e^{\beta(m_i - Mr)}\frac{a}{(t-t_i+c)^p}$$
+
+- $\mu$ : representa la tasa de actividad o intensidad de fondo
+- $p$ : es una tasa de decaimiento de intensidad
+- $a$ : es una constante proporcional de la tasa de réplicas
+- $\beta$ : es la tasa de réplicas con magnitudes superiores a un umbral. Si beta es un valor muy chico, quiere decir que se esperán mayores réplicas superiores a un umbral; mientras que si beta es muy grande, habrá pocas réplicas superiores al mismo umbral.
+- $c$: es una constante de decaimiento en el tiempo
+
+
