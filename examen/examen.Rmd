@@ -146,6 +146,10 @@ $\pi(\underset{-}{\theta}|\{ t_i, m_i\})  \propto e^{log(\mu) + \sum_{i=1}^{N} l
 
 Finalmente, el resultado obtenido con el algoritmo es una aproximación de la distribución posterior $\pi(\underset{-}{\theta}|\{ t_i, m_i\})$  a partir de una muestra de $\underset{-}{\theta}$.
 
+**7.** Describan como conceptualizan el cáculo de la distribución predictiva para este modelo, y en qué diferiría respecto a los modelos que revisamos en clase.
+
+En el artículo la conceptualización de la distribución es generada via el algorítmo Metropolis MCMC  y del reslutado se obtienen las medias para predecir los terremotos de magnitud mayor a 4.7. Esto difire con lo visto en clase, pues usamos la verosimilitud y la distibución inicial para generar la distribución predictiva. Y se vio el uso del método gibbs que usa un mustra aleatoria de nuestra distriubución, que es un caso patriticualt del algorítmo Metropolis MCMC.
+
 
 **8.** Para concluir, describan qué tipo de preguntas podrían ser relevantemente planteadas de manera
 que el modelo provea de una respuesta para ellas. (Consideren al menos dos preguntas).
