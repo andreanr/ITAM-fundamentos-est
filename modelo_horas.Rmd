@@ -8,6 +8,31 @@ output: html_document
 ¿ Existe discrepancia entre las mediciones de glucosa de los pacientes entre las cuatro horas del día
 donde se miden?
 
+
+
+```{r}
+library(tidyverse)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+
+theme_set(theme_bw())
+# Lectura de datos
+diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
+  X1 = col_integer(),
+  date = col_character(),
+  time = col_time(format = ""),
+  code = col_integer(),
+  value = col_double(),
+  individual = col_integer())) %>% 
+  select(-X1)
+
+# Catalogo de codigos
+catalogo_code <- read_csv("docs/catalogo_code.csv")
+
+```
+
 ```{r}
 mediciones_4 <- bd_diabetes %>%
   filter(str_detect(atributo, "medición")) %>% 
