@@ -1,0 +1,220 @@
+---
+title: "modelo_4horas"
+author: "Elizabeth Solis Diaz"
+date: "12/18/2017"
+output: html_document
+---
+
+¿ Existe discrepancia entre las mediciones de glucosa de los pacientes entre las cuatro horas del día
+donde se miden?
+
+
+
+```{r}
+library(tidyverse)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(R2jags)
+
+theme_set(theme_bw())
+# Lectura de datos
+diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
+  X1 = col_integer(),
+  date = col_character(),
+  time = col_time(format = ""),
+  code = col_integer(),
+  value = col_double(),
+  individual = col_integer())) %>% 
+  select(-X1)
+
+# Catalogo de codigos
+catalogo_code <- read_csv("docs/catalogo_code.csv")
+
+```
+
+```{r}
+mediciones_4 <- bd_diabetes %>%
+  filter(str_detect(atributo, "medición")) %>% 
+  filter(hour(time) %in% c(8, 12, 18, 22), minute(time) == 0, second(time) == 0) %>% 
+  mutate(horario_8am = ifelse((hour(time) %in% c(8) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_12pm = ifelse((hour(time) %in% c(12) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_18pm = ifelse((hour(time) %in% c(18) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_22pm = ifelse((hour(time) %in% c(22) & minute(time) == 0 & second(time) == 0), 1, 0),
+         individual = as.factor(individual)) %>% 
+  filter(value >0 )
+
+# n: num de individuos
+n_indiv <- mediciones_4 %>% distinct(individual) %>% nrow()
+n <- mediciones_4 %>% nrow()
+m <- 4
+
+data <- list("n" = n, "m" = m, "n_indiv" = n_indiv,
+             "horario_8am" = mediciones_4$horario_8am, 
+             "horario_12pm" = mediciones_4$horario_12pm, 
+             "horario_18pm" = mediciones_4$horario_18pm, 
+             "horario_22pm" = mediciones_4$horario_22pm,
+             "indiv" = mediciones_4$individual,
+             "y" = log(mediciones_4$value))
+
+inits <- function(){list(alpha = rep(0,n_indiv), beta = rep(0,m), mu = 0, sigma = 1, sigma.c = 1, a.1 = 1, b.1 = 1, yf1 = rep(0,n))}
+
+parameters <- c("beta", "alpha", "yf1")
+
+modelo_horas_jags <- '
+model
+{
+  #Likelihood
+  for (i in 1:n) {
+      y[i] ~ dnorm(alpha[indiv[i]] + beta[1] * horario_8am[i] + beta[2] * horario_12pm[i]  + beta[3] * horario_18pm[i] + beta[4] * horario_22pm[i], tau.c)
+    
+  }
+  
+  #Priors 
+  sigma.c ~ dunif(0, 100)
+  a.1 ~ dgamma(0.001, 0.001)
+  b.1 ~ dgamma(0.001, 0.001)
+  mu ~ dnorm(0, 0.001)
+  sigma ~ dunif(0, 100)
+  tau <- pow(sigma, -2)
+  tau.c <- pow(sigma.c, -2)
+
+  for (j in 1:n_indiv) {
+    alpha[j] ~ dgamma(a.1, b.1)
+  }
+
+  # coeficientes
+  for (k in 1:m){
+    beta[k] ~ dnorm(mu, tau)
+  }
+
+  for(i in 1:n) {
+    yf1[i] ~ dnorm(alpha[indiv[i]] + beta[1] * horario_8am[i] + beta[2] * horario_12pm[i]  + beta[3] * horario_18pm[i] + beta[4] * horario_22pm[i], tau.c)
+  }
+}
+'
+cat(modelo_horas_jags, file = 'modelo_horas_jags.txt')
+```
+
+```{r}
+ej2a <- jags(data = data, inits = inits, parameters.to.save = parameters, 
+             model.file = "modelo_horas_jags.txt", 
+             n.iter = 5000, n.chains = 3, n.burnin = 500, n.thin = 1)
+```
+
+
++ Simulaciones de los parámetros (nodos)
+
+```{r}
+out_2 <- ej2a$BUGSoutput$sims.list
+names(out_2)
+z <- out_2$beta[,1]
+```
+
++ Graficamente
+
+```{r}
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta1")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta1")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta1")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+
+```{r}
+z <- out_2$beta[,2]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta2")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta2")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta2")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+```{r}
+z <- out_2$beta[,3]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta3")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta3")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta3")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
+```{r}
+z <- out_2$beta[,4]
+# CAMBIAR titulo de gráficas con base en el parametro
+par(mfrow=c(2,2))
+plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta4")
+plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta4")
+hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta4")
+acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
+```
+
+
++ Resúmenes estadístico de los parámetros (nodos) monitoreados
+
+```{r}
+out_resumen_2 <- ej2$BUGSoutput$summary
+out_resumen_2[grep("beta", rownames(out_resumen_2)), c(1,3,7)]
+
+```
+
+
+
++ DIC
+
+```{r}
+out_dic_2 <-  ej2$BUGSoutput$DIC
+out_dic_2
+```
+
+
++ R2
+
+```{r}
+out_yf1 <- out_resumen_2[grep("yf1",rownames(out_resumen_2)),1]
+
+r2 <- cor(data$y, out_yf1)^2
+r2
+```
+
++ Devianza
+
+```{r}
+mean(out_2$deviance)
+```
+
++ Gráfica de ajuste
+
+```{r}
+plot(data$y, out_yf1, col =3, pch =16) 
+abline(a=0, b=1 , col = 1, lwd =2)
+grid()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

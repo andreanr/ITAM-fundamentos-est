@@ -1,0 +1,31 @@
+
+model
+{
+  #Likelihood
+  for (i in 1:n) {
+      y[i] ~ dnorm(alpha[indiv[i]] + beta[1] * horario_8am[i] + beta[2] * horario_12pm[i]  + beta[3] * horario_18pm[i] + beta[4] * horario_22pm[i], tau.c)
+    
+  }
+  
+  #Priors 
+  sigma.c ~ dunif(0, 100)
+  a.1 ~ dgamma(0.0001, 0.0001)
+  b.1 ~ dgamma(0.0001, 0.0001)
+  mu ~ dnorm(0, 0.001)
+  sigma ~ dunif(0, 100)
+  tau <- pow(sigma, -2)
+  tau.c <- pow(sigma.c, -2)
+
+  for (j in 1:n_indiv) {
+    alpha[j] ~ dgamma(a.1, b.1)
+  }
+
+  # coeficientes
+  for (k in 1:m){
+    beta[k] ~ dnorm(mu, tau)
+  }
+
+  for(i in 1:n) {
+    yf1[i] ~ dnorm(alpha[indiv[i]] + beta[1] * horario_8am[i] + beta[2] * horario_12pm[i]  + beta[3] * horario_18pm[i] + beta[4] * horario_22pm[i], tau.c)
+  }
+}

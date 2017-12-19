@@ -22,7 +22,6 @@ y - concentración de glucosa en la sangre
 $\alpha, \beta$ desconocidas
 
 
-
 Los datos diabetes-data.csv contienen la información de medición de glucosa en la sangre de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).
 
 El contenido y formato de los datos es el siguiente:
@@ -220,6 +219,8 @@ ej2 <- jags(data = data, inits = inits, parameters.to.save = parameters,
              model.file = "modelo_gamma.txt", 
              n.iter = 10000, n.chains = 1, n.burnin = 1000, n.thin = 1)
 
+
+mediciones_4
 ```
 
 + Simulaciones de los parámetros (nodos)
