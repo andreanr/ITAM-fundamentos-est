@@ -1,7 +1,5 @@
 ---
 title: "modelo_4horas"
-author: "Elizabeth Solis Diaz"
-date: "12/18/2017"
 output: html_document
 ---
 
@@ -31,6 +29,15 @@ diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
 
 # Catalogo de codigos
 catalogo_code <- read_csv("docs/catalogo_code.csv")
+
+
+# Base de datos 
+bd_diabetes <- diabetes %>% 
+  left_join(catalogo_code)
+  
+summary(bd_diabetes)
+glimpse(bd_diabetes)
+
 
 ```
 
@@ -100,7 +107,7 @@ cat(modelo_horas_jags, file = 'modelo_horas_jags.txt')
 ```{r}
 ej2a <- jags(data = data, inits = inits, parameters.to.save = parameters, 
              model.file = "modelo_horas_jags.txt", 
-             n.iter = 5000, n.chains = 3, n.burnin = 500, n.thin = 1)
+             n.iter = 10000, n.chains = 3, n.burnin = 500, n.thin = 1)
 ```
 
 
@@ -117,8 +124,8 @@ z <- out_2$beta[,1]
 ```{r}
 # CAMBIAR titulo de gráficas con base en el parametro
 par(mfrow=c(2,2))
-plot(z,type="l", col = "purple", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta1")
-plot(cumsum(z)/(1:length(z)),type="l", col = 3, ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta1")
+plot(z,type="l", xlab = "Iteraciones", ylab = "parametro", panel.first = grid(), main = "beta1")
+plot(cumsum(z)/(1:length(z)),type="l",  ylab = "Cadena", xlab = "Iteraciones", panel.first = grid(), main = "beta1")
 hist(z,freq=FALSE, col = 4, xlab = "parametro", ylab = "Frec", panel.first = grid(), main = "beta1")
 acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
 ```
@@ -161,9 +168,8 @@ acf(z, main = "", panel.first = grid()) # autocovariance or autocorrelation
 + Resúmenes estadístico de los parámetros (nodos) monitoreados
 
 ```{r}
-out_resumen_2 <- ej2$BUGSoutput$summary
+out_resumen_2 <- ej2a$BUGSoutput$summary
 out_resumen_2[grep("beta", rownames(out_resumen_2)), c(1,3,7)]
-
 ```
 
 
@@ -171,7 +177,7 @@ out_resumen_2[grep("beta", rownames(out_resumen_2)), c(1,3,7)]
 + DIC
 
 ```{r}
-out_dic_2 <-  ej2$BUGSoutput$DIC
+out_dic_2 <-  ej2a$BUGSoutput$DIC
 out_dic_2
 ```
 
