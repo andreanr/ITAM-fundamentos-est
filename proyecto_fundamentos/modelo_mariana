@@ -1,0 +1,44 @@
+
+model
+{
+  #Likelihood
+  for (i in 1:n) {
+  
+  y[i] ~ dnorm(mu[i], tau[i])
+  
+  mu[i] <- alpha[indiv[i]] +
+           beta[1] * horario_8am[i] +
+           beta[2] * horario_12pm[i] +
+           beta[3] * horario_18pm[i] +
+           beta[4] * horario_22pm[i]
+    
+  }
+  
+  # Previas precisión mediciones
+  for(j in 1:n){
+    tau[j] ~ dgamma(c0, c1)
+  }
+  c0 ~ dgamma(1, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:n_indiv){
+    alpha[i] ~ dnorm(0, 0.001)
+  }
+  
+  # Previas horas
+  for(k in 1:m){
+    beta[k] ~ dnorm(0, 0.001)
+  }
+  
+  ## estimabilidad
+  for(k in 1:m){
+    beta.adj[k] <- beta[k] - mean(beta[])
+  }
+  
+  
+  ## predicciones
+  for(i in 1:n) {
+      yf1[i] ~ dnorm(mu[i], tau[i])
+  }
+}
