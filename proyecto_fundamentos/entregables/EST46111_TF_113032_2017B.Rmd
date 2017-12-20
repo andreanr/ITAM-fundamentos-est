@@ -109,6 +109,10 @@ bd_mediciones <- bd_mediciones %>%
   mutate(tipo=ifelse((hour(time) %in% escritos_hrs) &
           (minute(time) == 0), 'papel', 'electrónico'))
 
+bd_mediciones <- bd_mediciones %>% 
+  mutate(electronico=as.factor(ifelse((hour(time) %in% escritos_hrs) &
+                       (minute(time) == 0), 1, 0)))
+
 # Plot 
 mean_papel <- subset(bd_mediciones, tipo == 'papel') %>% 
   select(value) %>% flatten_dbl() %>% mean(na.rm = TRUE)
@@ -187,7 +191,6 @@ y <- log(bd_mediciones$value)
 indiv <- bd_mediciones$individual
 nindiv <- length(unique(bd_mediciones$individual))
 x1 <- bd_mediciones$electronico
-x2 <- bd_mediciones$papel
 
 inits<-function(){list(alpha = rep(0,n), beta = rep(0,2), yf1=rep(1,n))}
 data <- list("y" = y, "N" = N, "indiv" = indiv, "nindiv" = nindiv, "x1" = x1)
