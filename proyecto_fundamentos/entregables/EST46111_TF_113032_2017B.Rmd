@@ -56,7 +56,7 @@ library(plotly)
 
 theme_set(theme_bw())
 # Lectura de datos
-diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
+diabetes <- read_csv("data_diabetes.csv", col_types = list(
   X1 = col_integer(),
   date = col_character(),
   time = col_time(format = ""),
@@ -66,7 +66,7 @@ diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
   select(-X1)
 
 # Catalogo de codigos
-catalogo_code <- read_csv("docs/catalogo_code.csv")
+catalogo_code <- read_csv("catalogo_code.csv")
 
 ```
 
@@ -240,4 +240,301 @@ insulina.
 
 ## 5. ¿Existe una discrepancia clara entre los pacientes que reportan sus niveles de glocosa depués de haber ingerido más alimentos de lo usual?
 
++ En el diagrama de caja se observa que la mediana y le media del nivel de glucosa cuando el paciente ingiere más alimentos de lo usual (2) es mayor que los días que no comen más (1).
+
+```{r,echo=FALSE}
+base_ingesta <- bd_diabetes %>% 
+  filter(atributo %in% c(atributo[str_detect(atributo, "medición")], 
+                         atributo[str_detect(atributo, "ingestión de comida mayor")]),
+         !is.na(atributo)) %>% 
+  mutate(tipo = ifelse(str_detect(atributo,"medición"), "medicion", "ingesta")) %>% 
+  group_by(date, individual, tipo) %>% 
+  summarise(media_glucosa = mean(value)) %>%
+  spread(tipo, media_glucosa, fill=1) %>% 
+  ungroup() %>% 
+  mutate(ingesta = ifelse(ingesta == 0, 2, ingesta)) 
+
+ggplot(base_ingesta, aes(x = as.factor(ingesta), y = medicion, color = as.factor(ingesta))) +
+  geom_boxplot(color = c("#42f4c5","#41cdf4")) +
+  stat_summary(fun.y=mean, colour="darkred", geom="point", 
+               shape=18, size=3) + 
+  scale_color_manual(name = "Ingesta", values = c("Sí", "No")) +
+  labs(title = "Boxplot mediciones de glucosa", x = "Ingesta mayor a lo usal",
+       y = "nivel de glucosa") 
+  
+```
+
+
+### Modelo diferencia consumo de alimentos
+
+Para esta pregunta se realizó un modelo jeráquico, la jerarquía se aplica a nivel individuo en donde los individuos comparten la precisión. Esto nos permite mejorar la precisión de las estimaciones de los parámetros para los que no se tienen suficientes observaciones. Por ejemplo, en este caso tenemos individuos con menos días observados. 
+
+En este primer modelo no se busca predecir el nivel de glucosa sino verificar si existe una diferencia clara entre los días que se ingieren más alimentos de lo usual.
+
+Se crea una base con el promedio diario de glucosa con un indicador que especifica si en ese día el paciente ingirió más alimentos de lo normal.
+
+```{r,echo=FALSE}
+base_ingesta <- bd_diabetes %>% 
+  filter(atributo %in% c(atributo[str_detect(atributo, "medición")], 
+                         atributo[str_detect(atributo, "ingestión de comida mayor")]),
+         !is.na(atributo)) %>% 
+  mutate(tipo = ifelse(str_detect(atributo,"medición"), "medicion", "ingesta")) %>% 
+  group_by(date, individual, tipo) %>% 
+  summarise(media_glucosa = mean(value)) %>%
+  spread(tipo, media_glucosa, fill=1) %>% 
+  ungroup() %>% 
+  mutate(ingesta = ifelse(ingesta == 0, 2, ingesta)) %>% 
+  filter(medicion>2)
+head(base_ingesta)
+```
+
+```{r,echo=FALSE}
+library(R2jags)
+prob<-function(x){
+  out<-min(length(x[x>0])/length(x),length(x[x<0])/length(x))
+  out
+}
+
+n <- nrow(base_ingesta)
+n_indiv <- base_ingesta$individual %>% 
+  unique() %>% 
+  length()
+data<-list("n"=n, "n_indv" = n_indiv, "y"=base_ingesta$medicion, "x" = base_ingesta$ingesta,
+           "indiv" = base_ingesta$individual)
+
+inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
+
+parameters<-c("alpha","beta.adj", "yf1")
+
+mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
+               n.iter=30000,n.chains=1,n.burnin=3000, n.thin = 1)
+```
+
++ Simulaciones de los parámetros
+
+```{r, echo=FALSE}
+out<-mod.reg$BUGSoutput$sims.list
+out.sum<-mod.reg$BUGSoutput$summary
+```
+
+En esta gráfica se observa que hay una discrepancia clara entre los días que ingieren más alimentos de lo usal. $Beta1$ es negativa y representa a los días que se consumió una cantidad normal de alimentos y $Beta2$ es positiva lo cual significa que el nivel de glucosa aumenta si se come más de lo normal.
+
+```{r,echo=FALSE}
+data.frame(Beta1 = out$beta.adj[,1], Beta2 = out$beta.adj[,2]) %>% 
+  gather() %>% 
+  ggplot(aes(x = value, fill = key)) +
+  geom_histogram(alpha = .3) +
+  scale_fill_discrete(name = "Parámetro")
+```
+
+Se grafica el parámetro $alpha$ para observar si existe alguna diferencia entre individuos. Observamos que se comportan de manera similar. (Los intervalos se empalman)
+
+```{r,echo=FALSE}
+out.alpha<-out.sum[grep("alpha",rownames(out.sum)),]
+
+out.alpha %>% 
+  data.frame() %>% 
+  arrange(mean) %>% 
+  ggplot(aes(x = 1:70, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(x=1:70, ymin = X2.5., ymax=X97.5.))
+```
+
++ Resúmenes estadístico de los parámetros monitoreados
+
+```{r,echo=FALSE}
+out.sum[grep("beta", rownames(out.sum)), c(1,3,7)]
+
+```
+
++ DIC
+
+```{r,echo=FALSE}
+out.dic<-mod.reg$BUGSoutput$DIC
+out.dic
+```
+
+
++ R2
+
+```{r,echo=FALSE}
+out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
+
+r2 <- cor(base_ingesta$medicion, out.yf[,1])^2
+r2
+```
+
++ Devianza
+
+```{r,echo=FALSE}
+mean(out$deviance)
+```
+
+### Modelo nivel de glucosa
+
+Queremos predecir la medición promedio de glucosa para un individuo cuando come una cantidad de alimentos normal o cuando se excede. 
+
+Para plantear este modelo, construimos una base con el promedio de las mediciones por individuo, separando por el tipo de consumo.
+
+```{r,echo=FALSE}
+base_ingesta <- bd_diabetes %>% 
+  mutate(hora = hour(time)) %>% 
+  filter(atributo %in% c(atributo[str_detect(atributo, "medición")], atributo[str_detect(atributo, "ingestión de comida mayor")]),
+         !is.na(atributo)) %>% 
+  mutate(tipo = ifelse(str_detect(atributo,"medición"), "medicion", "ingesta")) %>% 
+  group_by(date, individual, tipo) %>% 
+  summarise(media_glucosa = mean(value)) %>% 
+  spread(tipo, media_glucosa, fill = 1) %>% 
+  ungroup() %>% 
+  mutate(ingesta = ifelse(ingesta == 0, 2, ingesta),
+         unos = 1) %>% 
+  group_by(individual, ingesta) %>% 
+  summarise(media_glu = mean(medicion)) %>% 
+  filter(media_glu>2)
+
+head(base_ingesta)
+```
+
+En exploratorio de los datos vimos que la mediana del nivel de gluscosa es mayor cuando se excede de la cantidad de alimentos habitual.
+
+```{r,echo=FALSE}
+n_indiv <- base_ingesta$individual %>% 
+  unique() %>% 
+  length()
+
+n <- nrow(base_ingesta)
+
+data<-list("n"=n, "n_indv" = n_indiv, "y"=base_ingesta$media_glu, "x" = base_ingesta$ingesta, 
+           "indiv" = base_ingesta$individual)
+
+inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
+
+parameters<-c("alpha","beta.adj", "yf1")
+
+mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
+               n.iter=30000,n.chains=1,n.burnin=3000, n.thin = 1)
+```
+
++ Gráfica observado vs ajustado
+
+En la gráfica de ajustados vs osbservados se aprecia que los puntos están alrededor de una linea de 45º. Podemos ver que sobreestimamos mediciones pequeñas y subestimas mediciones grandes.
+
+```{r,echo=FALSE}
+out<-mod.reg$BUGSoutput$sims.list
+out.sum<-mod.reg$BUGSoutput$summary
+out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
+data.frame(y_obs = base_ingesta$media_glu, y_pred = out.yf[,1]) %>% 
+  ggplot(aes(x = y_obs, y = y_pred)) +
+  geom_point() +
+  xlim(80,240) +
+  ylim(80, 240) +
+  geom_abline(a = 0, b = 1, color = "red")
+```
+
++ Intervalos de confianza
+
+Los datos observados se encuentran dentro de nuestros intervalos de confianza.
+
+```{r,echo=FALSE}
+data.frame(y_obs = base_ingesta$media_glu, y_pred = out.yf[,1], y_inf = out.yf[,3],
+           y_sup = out.yf[,7]) %>% 
+  ggplot() +
+  geom_point(aes(x = 1:n, y = y_obs)) +
+  geom_point(aes(x = 1:n, y = y_pred), color = "red") +
+  geom_errorbar(aes(x = 1:n, ymin = y_inf, ymax=y_sup))  +
+  labs(x = "Observaciones", y = "Glucosa")
+```
+
++ Simulaciones de los parámetros
+
+Observamos que las betas indican una discrepancia entre la diferencia de la ingesta de alimentos, pero no es tan discrminante como el modelo anterior. Esto se puede deber a que estamos promediando individuos y no individuos-días. 
+
+```{r,echo=FALSE}
+data.frame(Beta1 = out$beta.adj[,1], Beta2 = out$beta.adj[,2]) %>% 
+  gather() %>% 
+  ggplot(aes(x = value, fill = key)) +
+  geom_histogram(alpha = .3) +
+  scale_fill_discrete(name = "Parámetro")
+```
+
+Se grafica el parámetro $alpha$ para observar si existe alguna diferencia entre individuos. Observamos que se comportan de forma similar. Sin embargo, en este caso hay alphas cuyos intervalos no se interceptan, entonces estos individuos sí tienen comportamiento distinto en sus mediciones de glucosa. 
+
+```{r,echo=FALSE}
+out.alpha<-out.sum[grep("alpha",rownames(out.sum)),]
+
+out.alpha %>% 
+  data.frame() %>% 
+  arrange(mean) %>% 
+  ggplot(aes(x = 1:70, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(x=1:70, ymin = X2.5., ymax=X97.5.))
+```
+
+En este modelo se obtiene un mejor DIC y $R^2$.
+
++ Resúmenes estadístico de los parámetros monitoreados
+
+```{r,echo=FALSE}
+out.sum[grep("beta", rownames(out.sum)), c(1,3,7)]
+
+```
+
++ DIC
+
+```{r,echo=FALSE}
+out.dic<-mod.reg$BUGSoutput$DIC
+out.dic
+```
+
+
++ R2
+
+```{r,echo=FALSE}
+out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
+
+r2 <- cor(base_ingesta$medicion, out.yf[,1])^2
+r2
+```
+
++ Devianza
+
+```{r,echo=FALSE}
+mean(out$deviance)
+```
+
+```{r, eval=FALSE}
+model{
+
+# Verosimilitud
+for (i in 1:n) {
+
+	y[i] ~ dgamma(r[i], lambda[i])
+	eta[i] <- alpha[indiv[i]] + beta[x[i]]
+	r[i] <- lambda[i]*mu[i]
+	
+	## Liga
+	log(mu[i]) <- eta[i]
+	}
+
+#Priors 
+for (i in 1:n_indv) {
+alpha[i] ~ dnorm(0,tau.a)
+}
+
+for (j in 1:2) { beta[j] ~ dnorm(0,0.001) }
+
+tau.a ~ dgamma(0.001,0.001)
+
+for(i in 1:n){lambda[i] ~ dunif(0,1)}
+
+#Prediction 1
+for (i in 1:n) { yf1[i] ~ dgamma(r[i], lambda[i]) }
+
+#Estimable quentities
+for(j in 1:2){
+	beta.adj[j] <- beta[j] - mean(beta[])
+}
+
+}
+```
 
