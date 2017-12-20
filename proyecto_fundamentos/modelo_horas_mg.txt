@@ -1,0 +1,38 @@
+model{
+
+# Verosimilitud
+for (i in 1:n) {
+
+	y[i] ~ dgamma(r[i], lambda[i])
+	eta[i] <- alpha[i] + beta[x[i]]
+	r[i] <- lambda[i]*mu[i]
+	
+	## Liga
+	log(mu[i]) <- eta[i]
+	}
+
+#Priors 
+for (i in 1:n) {
+alpha[i] ~ dnorm(0,tau.a)
+}
+
+for (j in 1:4) { beta[j] ~ dnorm(0,0.001) }
+
+tau.a ~ dgamma(0.001,0.001)
+
+for(i in 1:n){lambda[i] ~ dunif(0,1)}
+
+#Prediction 1
+for (i in 1:n) { yf1[i] ~ dgamma(r[i], lambda[i]) }
+
+#Estimable quentities
+
+for(i in 1:n){
+  alpha.adj[i] <- alpha[i] + mean(beta[]) 
+}
+
+for(j in 1:4){
+	beta.adj[j] <- beta[j] - mean(beta[])
+}
+
+}
