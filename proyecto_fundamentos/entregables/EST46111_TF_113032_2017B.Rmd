@@ -131,12 +131,16 @@ ggplot(bd_mediciones, aes(x=value, fill=tipo)) +
 ```
 
 ### Modelo diferencia mediciones en papel o electrónicas
-A partir de lo anterior, puede extenderse el modelo para considerar un modelo jerárquico que responda si existe diferencias entre las mediciones. El modelo se define de la siguiente manera:
+
+A partir de lo anterior, puede extenderse el modelo para considerar un modelo jerárquico que responda si existe o no diferencias entre las mediciones. 
+
+El modelo se define de la siguiente manera:
 
 $$
 log(y_{it}) \sim N(\mu_{it}, \tau_{i}) \\
 \mu_{it} = \alpha_{i} + \beta_{i} * electrónico_{it} 
 $$
+
 Además:
 $$
 \alpha_{i} \sim N(0, 0.1) \\
@@ -206,7 +210,7 @@ jags.fit <- jags(
   n.burnin = 1000)
 ```
 
-Siguiendo el modelo utiliando 5000 iteraciones, 3 cadenas y quemando las primeras 1000, se puede observar que cero pertenece al intervalo de la beta, por lo que no se rechaza la hipótesis nula, lo que implica que no existen diferencias entre las mediciones realizadas en papel o electrónicamente. 
+Siguiendo el modelo utilizando 5000 iteraciones, 3 cadenas y quemando las primeras 1000, se puede observar que cero pertenece al intervalo de la beta, por lo que no se rechaza la hipótesis nula, lo que implica que no existen diferencias entre las mediciones realizadas en papel o electrónicamente. 
 
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
 out.dic<-jags.fit$BUGSoutput$DIC
@@ -221,6 +225,7 @@ data.frame(Beta1 = out$beta) %>%
 ```
 
 Además, se puede observar que los valores generales de glucosa como su varianza varían por paciente como se muestra en las gráficas siguientes. 
+
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
 out.alpha<-out.sum[grep("alpha",rownames(out.sum)),]
 
@@ -251,7 +256,7 @@ realizados antes del desayuno (08:00), comida (12:00), cena (18:00), y hora de d
 antes de ingerir los alimentos como se muestra en la siguiente tabla:   
 
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
-mediciones_4 <- bd_diabetes %>%
+mediciones_41 <- bd_diabetes %>%
   filter(str_detect(atributo, "medición")) %>% 
   filter(hour(time) %in% c(8, 12, 18, 22), minute(time) == 0, second(time) == 0) %>% 
   mutate(horario = ifelse(hour(time) %in% c(8), "desayuno",
@@ -259,7 +264,7 @@ mediciones_4 <- bd_diabetes %>%
                    ifelse(hour(time) %in% c(18), "cena",
                    ifelse(hour(time) %in% c(22), "dormir","")))))
 
-mediciones_4 %>% distinct(atributo)
+mediciones_41 %>% distinct(atributo)
 ```
 
 + En la gráfica que se presenta a continuación, notamos que las mediciones
@@ -273,15 +278,198 @@ por lo que, la medición de las 12 (comida) será más baja y con más variació
 dependiendo de la actividad física de la persona.
 
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
-ggplot(mediciones_4) +
+ggplot(mediciones_41) +
   geom_boxplot(aes(x = "1", y = value, color = horario)) + 
   facet_grid(~horario) +
   theme(axis.text.x=element_blank(),
         axis.ticks.x=element_blank(),
         axis.title.x=element_blank()) +
-  ggtitle("Medición de glucosa antes de ingerir el alimento") +
+  ggtitle("Medición de glucosa") +
   labs(y = "Nivel de glucosa")
 ```
+
+### Modelo diferencia mediciones en las 4 horas del día
+
+Con base en lo anterior, sugerimos un modelo jerárquico para responder si existe 
+discrepancia en las mediciones realizadas en las 4 distintas horas del día
+
+El modelo sugerido es 
+
+$$
+log(y_{it}) \sim N(\mu_{i}, \tau_{i}) \\
+\mu_{i} = \alpha_{ij} + \beta_{1} * horario8am_{i} + \beta_{2} * horario12pm_{i} + \beta_{3} * horario18pm_{i} + \beta_{4} * horario22pm_{i}
+$$
+
+Además:
+$$
+\alpha_{i} \sim N(0, 0.001) \\
+\tau_{i} \sim gamma(c_0, c_1) \\
+c0 \sim gamma(1, 1) \\
+c1 \sim gamma(1, 1) \\
+\beta_i \sim N(0, 0.001) \ ; \ i = 1,2,3,4
+
+$$
+donde:
++ $\alpha_i$ es el nivel de glucosa de cada individuo *i*, i = 1,2, ..., 70
++ $horario8am_{i}$ indica si la medición fue realizada en el desayuno  
++ $horario12pm_{i}$ indica si la medición fue realizada en la comida  
++ $horario18pm_{i}$ indica si la medición fue realizada en la cena  
++ $horario22pm_{i}$ indica si la medición fue realizada al dormir  
+
+```{r, echo=FALSE}
+modelo_horas <- '
+model
+{
+  #Likelihood
+  for (i in 1:n) {
+  
+  y[i] ~ dnorm(mu[i], tau[i])
+  
+  mu[i] <- alpha[indiv[i]] +
+           beta[1] * horario_8am[i] +
+           beta[2] * horario_12pm[i] +
+           beta[3] * horario_18pm[i] +
+           beta[4] * horario_22pm[i]
+    
+  }
+  
+  # Previas precisión mediciones
+  for(j in 1:n){
+    tau[j] ~ dgamma(c0, c1)
+  }
+  c0 ~ dgamma(1, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:n_indiv){
+    alpha[i] ~ dnorm(0, 0.001)
+  }
+  
+  # Previas horas
+  for(k in 1:m){
+    beta[k] ~ dnorm(0, 0.001)
+  }
+  
+  ## estimabilidad
+  for(k in 1:m){
+    beta.adj[k] <- beta[k] - mean(beta[])
+  }
+  
+  
+  ## predicciones
+  for(i in 1:n) {
+      yf1[i] ~ dnorm(mu[i], tau[i])
+  }
+}
+'
+cat(modelo_horas, file = 'modelo_horas')
+```
+
+El modelo se corrió con 3 distintas cadenas, 5000 iteraciones donde las primeras 1000 son de calentamiento
+
+```{r, echo = FALSE}
+
+mediciones_4 <- bd_diabetes %>%
+  filter(str_detect(atributo, "medición"), value > 0 ) %>% 
+  filter(hour(time) %in% c(8, 12, 18, 22), minute(time) == 0, second(time) == 0) %>% 
+  mutate(horario_8am = ifelse((hour(time) %in% c(8) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_12pm = ifelse((hour(time) %in% c(12) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_18pm = ifelse((hour(time) %in% c(18) & minute(time) == 0 & second(time) == 0), 1, 0),
+         horario_22pm = ifelse((hour(time) %in% c(22) & minute(time) == 0 & second(time) == 0), 1, 0),
+         individual = as.factor(individual),
+         atributo = as.factor(gsub("[ ]+","_",tolower(atributo)))) 
+
+n <- mediciones_4 %>% nrow()
+m <- 4
+data <- list("n" = n, 
+             "m" = m, 
+             "n_indiv" =  length(unique(mediciones_4$individual)),
+             "horario_8am" = mediciones_4$horario_8am, 
+             "horario_12pm" = mediciones_4$horario_12pm, 
+             "horario_18pm" = mediciones_4$horario_18pm, 
+             "horario_22pm" = mediciones_4$horario_22pm,
+             "indiv" = mediciones_4$individual,
+             "y" = log(mediciones_4$value))
+
+parameters2 <- c("beta", "beta.adj", "alpha", "yf1")
+
+# Inits
+inits <- function(){
+  list(tau = rep(0.01,n),
+       c0 = 0.5,
+       c1 = 0.5,
+       alpha = rep(0, n_indiv),
+       beta = rep(0, m),
+       yf1 = rep(0.5,n))
+  }
+
+
+
+fit_jags <- jags.parallel(data = data, 
+                 parameters.to.save = parameters2,
+                 model.file = "modelo_horas",
+                 n.iter = 5000, 
+                 n.chains = 3, 
+                 n.cluster = 7, 
+                 n.burnin = 10, 
+                 n.thin = 1)
+
+
+```
+
+El resumen estadístico para las betas asociadas a las 4 horas se presentan a continuación y con 
+esto podemos decir que 
+
++ La media de la beta2 que corresponde a la comida es la única que difiere significativamente 
+con respecto al resto de las mediciones.   
++ El valor medio de las betas es positivo para todas, menos el de la comida.  
++ La Desviación estándar de las 4 horas es muy similar.  
++ De igual manera, se muestra el limite inferior y superior del IC al 95%   
+
+
+```{r, echo=FALSE}
+out.sum <- cbind(fit_jags$BUGSoutput$summary %>% 
+  data.frame, parametro = rownames(fit_jags$BUGSoutput$summary)) %>% 
+  dplyr::select(parametro, mean:X97.5.)
+row.names(out.sum) <- NULL
+colnames(out.sum) <- c("parametro", "media", "sd", "p.025", "p.25",
+                       "p.5", "p.75", "p.975")
+out.sum %>% filter(str_detect(parametro, "beta.adj")) %>% select(-p.25,-p.5, -p.75)
+```
+
+A continuación se muestra una gráfica `boxplot` con las betas asociadas a cada momento 
+(desyauno/comida/cena/dormir)  y observamos lo que habiamos notado:
+
++ La única con niveles bajos de glucosa es a la hora de la comida. El 
+resto, difieren ligeramente entre ellos por lo que en conclusión podríamos 
+decir que sí existe discrepancia en las mediciones pero es más evidente 
+en la medición de las 12 (a la hora de la comida) que se debe a lo explicado 
+previamente.
+
+```{r, echo=FALSE}
+out.sum <- cbind(fit_jags$BUGSoutput$summary %>% 
+  data.frame, parametro = rownames(fit_jags$BUGSoutput$summary)) %>% 
+  dplyr::select(parametro, mean:X97.5.)
+row.names(out.sum) <- NULL
+colnames(out.sum) <- c("parametro", "media", "sd", "p.025", "p.25",
+                       "p.5", "p.75", "p.975")
+
+
+fit_jags$BUGSoutput$sims.matrix %>% 
+  as.data.frame() %>% 
+  dplyr::select(contains("beta.adj")) %>%
+  mutate(id = row_number()) %>% 
+  gather(parametro, valor, -id) %>% 
+  mutate(parametro = gsub("[1]", "desayuno",parametro),
+         parametro = gsub("[2]", "comida",parametro),
+         parametro = gsub("[3]", "cena",parametro),
+         parametro = gsub("[4]", "dormir",parametro)) %>% 
+  ggplot(aes(x = parametro, y = valor, col = parametro)) +
+  geom_boxplot() +
+  coord_cartesian(ylim = c(-.15, .15))
+
+```
+
 
 
 ## 3. ¿ Existe discrepancia de las mediciones de glucosa entre pacientes?
@@ -619,6 +807,94 @@ r2
 ```{r,echo=FALSE}
 mean(out$deviance)
 ```
+
+## Anexo
+
+A continuación se muestra el código de los modelos asociados a la pregunta 1,2 y 5.
+
+### Anexo: Modelo pregunta 1
+
+```{r, eval=FALSE, echo = TRUE}
+
+model
+{
+  #Likelihood
+  for (i in 1:N) {
+    y[i] ~ dnorm(mu[i], tau[indiv[i]])
+    mu[i] <- alpha[indiv[i]] + beta[1] * x1[i]
+  }
+
+  c0 ~ dgamma(.001, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:nindiv){
+    alpha[i] ~ dnorm(0, 0.1)
+    tau[i] ~ dgamma(c0, c1)
+  }
+  
+  # Previas horas
+  beta ~ dnorm(0, 0.01)
+  
+  ## predicciones
+  for(i in 1:N) {
+    yf1[i] ~ dnorm(mu[i], tau[indiv[i]])
+  }
+  }
+
+
+```
+
+### Anexo: Modelo pregunta 2
+
+```{r, eval=FALSE, echo = TRUE}
+model
+{
+  #Likelihood
+  for (i in 1:n) {
+  
+  y[i] ~ dnorm(mu[i], tau[i])
+  
+  mu[i] <- alpha[indiv[i]] +
+           beta[1] * horario_8am[i] +
+           beta[2] * horario_12pm[i] +
+           beta[3] * horario_18pm[i] +
+           beta[4] * horario_22pm[i]
+    
+  }
+  
+  # Previas precisión mediciones
+  for(j in 1:n){
+    tau[j] ~ dgamma(c0, c1)
+  }
+  c0 ~ dgamma(1, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:n_indiv){
+    alpha[i] ~ dnorm(0, 0.001)
+  }
+  
+  # Previas horas
+  for(k in 1:m){
+    beta[k] ~ dnorm(0, 0.001)
+  }
+  
+  ## estimabilidad
+  for(k in 1:m){
+    beta.adj[k] <- beta[k] - mean(beta[])
+  }
+  
+  
+  ## predicciones
+  for(i in 1:n) {
+      yf1[i] ~ dnorm(mu[i], tau[i])
+  }
+}
+```
+
+
+### Anexo: Modelo pregunta 5
 
 ```{r, eval=FALSE}
 model{
