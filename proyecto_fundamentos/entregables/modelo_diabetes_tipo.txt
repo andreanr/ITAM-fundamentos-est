@@ -1,0 +1,26 @@
+
+model
+{
+  #Likelihood
+  for (i in 1:N) {
+    y[i] ~ dnorm(mu[i], tau[indiv[i]])
+    mu[i] <- alpha[indiv[i]] + beta[1] * x1[i]
+  }
+
+  c0 ~ dgamma(.001, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:nindiv){
+    alpha[i] ~ dnorm(0, 0.1)
+    tau[i] ~ dgamma(c0, c1)
+  }
+  
+  # Previas horas
+  beta ~ dnorm(0, 0.01)
+  
+  ## predicciones
+  for(i in 1:N) {
+    yf1[i] ~ dnorm(mu[i], tau[indiv[i]])
+  }
+  }

@@ -132,7 +132,8 @@ ggplot(bd_mediciones, aes(x=value, fill=tipo)) +
 
 ### Modelo diferencia mediciones en papel o electrónicas
 
-A partir de lo anterior, puede extenderse el modelo para considerar un modelo jerárquico que responda si existe o no diferencias entre las mediciones. 
+A partir de lo anterior, puede extenderse el modelo para considerar un modelo jerárquico 
+que responda si existe o no diferencias entre las mediciones. 
 
 El modelo se define de la siguiente manera:
 
@@ -146,11 +147,11 @@ $$
 \alpha_{i} \sim N(0, 0.1) \\
 \tau_{i} \sim gamma(c_0, c_1) \\
 \beta \sim N(0, 0.01)
-
 $$
 donde:
-+ $\alpha_i$ es el nivel general de glucosa de cada individuo *i*
-+ $electrónico_{it}$ indica si la medición fue realizada electrónicamente o en papel
+
++ $\alpha_i$ es el nivel general de glucosa de cada individuo *i*   
++ $electrónico_{it}$ indica si la medición fue realizada electrónicamente o en papel   
 
 Para comprobar que no existen diferencias significativas entre las mediciones en papel o electrónicas tenemos que:
 $$
@@ -200,17 +201,21 @@ inits<-function(){list(alpha = rep(0,n), beta = rep(0,2), yf1=rep(1,n))}
 data <- list("y" = y, "N" = N, "indiv" = indiv, "nindiv" = nindiv, "x1" = x1)
 
 jags.parameters <-  c("alpha","yf1", "beta", "tau")
-jags.fit <- jags( 
+jags.fit <- jags.parallel( 
   model.file = "modelo_diabetes_tipo.txt",
   data = data,
   parameters.to.save = jags.parameters,
   n.iter = 5000,
   n.thin = 1, 
   n.chains = 3,
-  n.burnin = 1000)
+  n.burnin = 1000,
+  n.cluster = 7)
 ```
 
-Siguiendo el modelo utilizando 5000 iteraciones, 3 cadenas y quemando las primeras 1000, se puede observar que cero pertenece al intervalo de la beta, por lo que no se rechaza la hipótesis nula, lo que implica que no existen diferencias entre las mediciones realizadas en papel o electrónicamente. 
+Siguiendo el modelo utilizando 5000 iteraciones, 3 cadenas y quemando las primeras 1000, se 
+puede observar que cero pertenece al intervalo de la beta, por lo que no se rechaza la 
+hipótesis nula, lo que implica que no existen diferencias entre las mediciones realizadas en 
+papel o electrónicamente. 
 
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
 out.dic<-jags.fit$BUGSoutput$DIC
@@ -612,8 +617,8 @@ inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
 
 parameters<-c("alpha","beta.adj", "yf1")
 
-mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
-               n.iter=30000,n.chains=1,n.burnin=3000, n.thin = 1)
+mod.reg <-jags.parallel(data,inits,parameters,model.file="modelo_ingesta.txt",
+               n.iter=5000,n.chains=1,n.burnin=1000, n.thin = 1, n.cluster = 7)
 ```
 
 + Simulaciones de los parámetros
@@ -896,7 +901,7 @@ model
 
 ### Anexo: Modelo pregunta 5
 
-```{r, eval=FALSE}
+```{r, eval=FALSE, echo=TRUE}
 model{
 
 # Verosimilitud
