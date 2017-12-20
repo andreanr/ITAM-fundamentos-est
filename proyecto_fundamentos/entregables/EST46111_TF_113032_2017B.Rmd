@@ -53,6 +53,7 @@ library(stringr)
 library(lubridate)
 library(ggplot2)
 library(plotly)
+library(R2jags)
 
 theme_set(theme_bw())
 # Lectura de datos
