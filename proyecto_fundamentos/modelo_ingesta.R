@@ -40,13 +40,13 @@ base_ingesta %>%
 
 n <- nrow(base_ingesta)
 
-data<-list("n"=n,"y"=base_ingesta$media_glu, "x" = base_ingesta$ingesta)
+data<-list("n"=n,"y"=base_ingesta$media_glu, "x" = base_ingesta$ingesta, "individual" = base_ingesta$individual)
 
-inits<-function(){list(alpha = rep(0,n), beta = rep(0,2), yf1=rep(1,n))}
+inits<-function(){list(alpha = rep(0,70), beta = rep(0,2), yf1=rep(1,n))}
 
-parameters<-c("alpha.adj","beta.adj", "yf1")
+parameters<-c("alpha","beta.adj", "yf1")
 
-mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
+mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta_normal",
                n.iter=30000,n.chains=1,n.burnin=3000, n.thin = 1)
 
 out.dic<-mod.reg$BUGSoutput$DIC
@@ -83,9 +83,9 @@ out.alpha<-out.sum[grep("alpha",rownames(out.sum)),]
 out.alpha %>% 
   data.frame() %>% 
   arrange(mean) %>% 
-  ggplot(aes(x = 1:104, y = mean)) +
+  ggplot(aes(x = 1:70, y = mean)) +
   geom_point() +
-  geom_errorbar(aes(x=1:104, ymin = X2.5., ymax=X97.5.))
+  geom_errorbar(aes(x=1:70, ymin = X2.5., ymax=X97.5.))
 
 # modelo horarios ---------------------------------------------------------
 
