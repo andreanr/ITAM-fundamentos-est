@@ -1,0 +1,243 @@
+---
+title: "Examen Final Fundamentos de Estadística"
+author: "Andrea Navarrete, Mariana Godina, Elizabeth Solis"
+output:
+  html_document: 
+    df_print: paged
+    highlight: tango
+    theme: spacelab
+    toc: yes
+---
+
+```{r options, echo = FALSE}
+knitr::opts_chunk$set(
+    comment = "",
+    collapse = TRUE,
+    message = FALSE,
+    error=TRUE, 
+    fig.align = "center",
+    warning=FALSE, 
+    echo = FALSE
+)
+```
+
+## Contexto
+Los datos diabetes-data.csv contienen la información de medición de glucosa en la sangre de 70 pacientes con diabetes observados en diferentes momentos del tiempo (horas, días, semanas, meses).
+
+El contenido y formato de los datos es el siguiente:
+
+a) Fecha (date) en formato MM-DD-YYYY
+b) Hora (time) en formato XX:YY
+c) Código (code)
+d) Nivel de glucosa (value)
+e) Indicadora de paciente (individual)
+
+Los datos de concentración en la sangre se obtienen de dos fuentes:
+
++ Mediciones electrónicas automáticas  
++ Registros escritos en papel.   
+
+Las mediciones eletrónicas automáticas se obtienen con etiquetas de tiempo específicas, mientras que las mediciones obtenidas de los registros *escritos* corresponden a *horarios ficticios* con la siguiente relación: Desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00).
+
+El campo code corresponde al tipo de insulina administrada al paciente.
+
+Nota: La información de la adminitración de insulina, en este momento, es irrelevante.
+
+
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+# Lectura de datos
+library(tidyverse)
+library(readr)
+library(stringr)
+library(lubridate)
+library(ggplot2)
+library(plotly)
+
+theme_set(theme_bw())
+# Lectura de datos
+diabetes <- read_csv("datos/data_diabetes.csv", col_types = list(
+  X1 = col_integer(),
+  date = col_character(),
+  time = col_time(format = ""),
+  code = col_integer(),
+  value = col_double(),
+  individual = col_integer())) %>% 
+  select(-X1)
+
+# Catalogo de codigos
+catalogo_code <- read_csv("docs/catalogo_code.csv")
+
+```
+
+## Un primer vistazo a los datos
+
+```{r, warning=FALSE, message=FALSE}
+# Base de datos 
+bd_diabetes <- diabetes %>% 
+  left_join(catalogo_code)
+  
+summary(bd_diabetes)
+glimpse(bd_diabetes)
+```
+
+## 1. ¿Existe discrepancia (en media o distribucional) entre las mediciones reportadas de registros escritos en papel y las que son reportadas electrónicamene?
+
++ Sabemos que las mediciones en papel se realizan en las siguientes horars: 
+desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00). 
+El resto de las mediciones son consideradas como electrónicas.   
++ Con base en los datos podemos notar que no existe diferencia en 
+las mediciones de glucosa.  
++ Podemos observar que las medias son muy similares, la media en 
+papel es ligeramente más alta que la electrónica.  
++ Se muestra menor frecuencia en las mediciones de *papel* y esto se debe 
+a que solo se realizan 4 veces al día (desayuno, comida, cena, dormir); no
+obstante, las mediciones electrónicas se realizan con mayor frecuencia a 
+lo largo del día.    
++ Lo anterior se refleja en la siguiente gráfica:  
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+bd_mediciones <- bd_diabetes %>% 
+  mutate(atributo = str_replace_all(atributo, " ", "_")) %>% 
+  filter(str_detect(atributo, "medición"))
+
+# separamos escritos vs. aparato
+escritos_hrs <- c(8, 12, 18, 22)
+bd_mediciones <- bd_mediciones %>% 
+  mutate(tipo=ifelse((hour(time) %in% escritos_hrs) &
+          (minute(time) == 0), 'papel', 'electrónico'))
+
+# Plot 
+mean_papel <- subset(bd_mediciones, tipo == 'papel') %>% 
+  select(value) %>% flatten_dbl() %>% mean(na.rm = TRUE)
+mean_electronicos <- subset(bd_mediciones, tipo == 'electrónico') %>% 
+  select(value) %>% flatten_dbl() %>% mean(na.rm = TRUE)
+
+ggplot(bd_mediciones, aes(x=value, fill=tipo)) +
+  geom_histogram(alpha=0.2, position="identity") +
+  scale_fill_manual(values=c("cyan4", "magenta")) +
+  geom_vline(aes(xintercept = mean_papel, color="magenta"), 
+             show.legend = FALSE) + 
+  geom_vline(aes(xintercept = mean_electronicos, color="cyan4"),
+             show.legend = FALSE ) +
+  ggtitle("Histograma de medición de glucosa con 2 tipos de registros") +
+  labs(x = "Nivel de glucosa")
+```
+
+
+## 2. ¿ Existe discrepancia entre las mediciones de glucosa de los pacientes entre las cuatro horas del día donde se miden?
+
++ Supongamos que las `4 horas en las que se miden` se refiere a los registros
+realizados antes del desayuno (08:00), comida (12:00), cena (18:00), y hora de dormir (22:00).        
++ Una vez identificados y filtrados estos horarios, notamos que las mediciones fueron realizadas 
+antes de ingerir los alimentos como se muestra en la siguiente tabla:   
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+mediciones_4 <- bd_diabetes %>%
+  filter(str_detect(atributo, "medición")) %>% 
+  filter(hour(time) %in% c(8, 12, 18, 22), minute(time) == 0, second(time) == 0) %>% 
+  mutate(horario = ifelse(hour(time) %in% c(8), "desayuno",
+                   ifelse(hour(time) %in% c(12), "comida",
+                   ifelse(hour(time) %in% c(18), "cena",
+                   ifelse(hour(time) %in% c(22), "dormir","")))))
+
+mediciones_4 %>% distinct(atributo)
+```
+
++ En la gráfica que se presenta a continuación, notamos que las mediciones
+realizadas en las 4 horas son muy similares, excepto por la medición antes 
+de la comida.  
++ La medición de la comida es la que presenta más variación y `outliers`. 
+También el primer, segundo y tercer cuartil son más bajos en relación al
+resto de las mediciones.
++ Tiene sentido, ya que en el día es cuando existe el mayor gasto de energía; 
+por lo que, la medición de las 12 (comida) será más baja y con más variación 
+dependiendo de la actividad física de la persona.
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+ggplot(mediciones_4) +
+  geom_boxplot(aes(x = "1", y = value, color = horario)) + 
+  facet_grid(~horario) +
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank()) +
+  ggtitle("Medición de glucosa antes de ingerir el alimento") +
+  labs(y = "Nivel de glucosa")
+```
+
+
+## 3. ¿ Existe discrepancia de las mediciones de glucosa entre pacientes?
+
++ En la gráfica que se presenta a continuación podemos notar que sí existe 
+diferencia en las mediciones medias de cada individuo.  
++ Existen individuos muy por debajo de la media global y también por arriba. 
+Incluso, hay algunos que estan por encima del tercer cuartil. 
+```{r, warning=FALSE, message=FALSE, fig.height=8, echo=FALSE}
+
+medidas_grls <- bd_diabetes %>% 
+  filter(value > 0) %>% 
+  summarise(media_global = mean(value, na.rm = TRUE), 
+            mediana = median(value, na.rm = TRUE),
+            q1 = quantile(value,.25),
+            q3 = quantile(value,.75))
+
+medidas_medias_inidv <- bd_diabetes %>% filter(value > 0) %>% 
+  group_by(individual) %>% 
+  summarise(media_medicion_glucosa = mean(value, na.rm = TRUE))
+
+ggplot(medidas_medias_inidv,aes(x = reorder(individual,media_medicion_glucosa), y = media_medicion_glucosa)) +
+  geom_bar(stat = "identity", fill = "cyan3", alpha = 0.5) + coord_flip() +
+  ggtitle("Medición media de glucosa por individuo") + 
+  geom_hline(aes(yintercept = medidas_grls$media_global, color="media_global")) + 
+  geom_hline(aes(yintercept = medidas_grls$q1, color="q1")) + 
+  geom_hline(aes(yintercept = medidas_grls$q3, color= "q3")) +
+  labs(x = "id del individuo", y = "Nivel de glucosa")
+```
+
++ En el siguiente boxplot, se puede notar que tenemos `outliers` y nuestro 
+rango de datos tiene una gran variabilidad desde `50.04`hasta `121.67`.  
++ Existe discrepancia entre individuos aunque hay algunos  
+similares entre ellos.  
+
+```{r, echo=FALSE}
+preg3.1 <-ggplot(medidas_medias_inidv) +
+  geom_boxplot(aes(x = "1", y = media_medicion_glucosa), col = "royalblue") + 
+  theme(axis.text.x=element_blank(),
+        axis.ticks.x=element_blank(),
+        axis.title.x=element_blank()) +
+  ggtitle("Medición media de glucosa por individuo") +
+  labs(y = "Nivel de glucosa")
+ggplotly(preg3.1)
+```
+
+
+## 4. ¿ Existe discrepancia entre las mediciones de glucosa asociadas con la administración de insulina con respecto a las demás?
+
+```{r, warning=FALSE, message=FALSE, fig.width=8, echo=FALSE}
+bd_diabetes %>% 
+  filter(value>0) %>% 
+  group_by(code, atributo) %>% 
+  summarise(nivel_glucosa = mean(value, na.rm = TRUE)) %>% 
+  ggplot(aes(x = code, y = nivel_glucosa, col = atributo)) +
+  geom_point()+
+  geom_text(aes(label=code),hjust=0, vjust=1)  +
+  ggtitle("Nivel medio de glucosa por codigo (atributo)")
+
+```
+
+Sí, son más bajas:
+
++ Los codigos `33`,`34`,`35`,`36`  corresponden a administración de insulina medicada, 
+por lo que ayuda a disminuir el nivel de glucosa en la sangre, por dicha razón estos 
+códigos se asocian con niveles bajos de glucosa.  
++ El nivel más alto de glucosa es después del almuerzo y tiene sentido, pues después
+de ingerir alimentos, la glucosa se eleva; por lo general, el almuerzo es de las 
+comidas con mayor catidad de calorías.  
++ El resto de las mediciones son similares, pues no corresponden a administración de 
+insulina.
+
+
+
+## 5. ¿Existe una discrepancia clara entre los pacientes que reportan sus niveles de glocosa depués de haber ingerido más alimentos de lo usual?
+
+
