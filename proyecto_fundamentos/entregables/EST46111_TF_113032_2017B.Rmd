@@ -99,7 +99,8 @@ lo largo del día.
 ```{r, warning=FALSE, message=FALSE, echo = FALSE}
 bd_mediciones <- bd_diabetes %>% 
   mutate(atributo = str_replace_all(atributo, " ", "_")) %>% 
-  filter(str_detect(atributo, "medición"))
+  filter(str_detect(atributo, "medición")) %>% 
+  filter(value > 0)
 
 # separamos escritos vs. aparato
 escritos_hrs <- c(8, 12, 18, 22)
@@ -124,6 +125,119 @@ ggplot(bd_mediciones, aes(x=value, fill=tipo)) +
   labs(x = "Nivel de glucosa")
 ```
 
+### Modelo diferencia mediciones en papel o electrónicas
+A partir de lo anterior, puede extenderse el modelo para considerar un modelo jerárquico que responda si existe diferencias entre las mediciones. El modelo se define de la siguiente manera:
+
+$$
+log(y_{it}) \sim N(\mu_{it}, \tau_{i}) \\
+\mu_{it} = \alpha_{i} + \beta_{i} * electrónico_{it} 
+$$
+Además:
+$$
+\alpha_{i} \sim N(0, 0.1) \\
+\tau_{i} \sim gamma(c_0, c_1) \\
+\beta \sim N(0, 0.01)
+
+$$
+donde:
++ $\alpha_i$ es el nivel general de glucosa de cada individuo *i*
++ $electrónico_{it}$ indica si la medición fue realizada electrónicamente o en papel
+
+Para comprobar que no existen diferencias significativas entre las mediciones en papel o electrónicas tenemos que:
+$$
+H_{o}: \beta = 0 \\
+H_{1}: \beta \neq 0
+$$
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+modelo_diabetes_tipo.txt <- 
+'
+model
+{
+  #Likelihood
+  for (i in 1:N) {
+    y[i] ~ dnorm(mu[i], tau[indiv[i]])
+    mu[i] <- alpha[indiv[i]] + beta[1] * x1[i]
+  }
+
+  c0 ~ dgamma(.001, 1)
+  c1 ~ dgamma(1, 1)
+  
+  # Previas individuos
+  for(i in 1:nindiv){
+    alpha[i] ~ dnorm(0, 0.1)
+    tau[i] ~ dgamma(c0, c1)
+  }
+  
+  # Previas horas
+  beta ~ dnorm(0, 0.01)
+  
+  ## predicciones
+  for(i in 1:N) {
+    yf1[i] ~ dnorm(mu[i], tau[indiv[i]])
+  }
+  }
+'
+
+cat(modelo_diabetes_tipo.txt, file = 'modelo_diabetes_tipo.txt')
+
+N <- nrow(bd_mediciones)
+y <- log(bd_mediciones$value)
+indiv <- bd_mediciones$individual
+nindiv <- length(unique(bd_mediciones$individual))
+x1 <- bd_mediciones$electronico
+x2 <- bd_mediciones$papel
+
+inits<-function(){list(alpha = rep(0,n), beta = rep(0,2), yf1=rep(1,n))}
+data <- list("y" = y, "N" = N, "indiv" = indiv, "nindiv" = nindiv, "x1" = x1)
+
+jags.parameters <-  c("alpha","yf1", "beta", "tau")
+jags.fit <- jags( 
+  model.file = "modelo_diabetes_tipo.txt",
+  data = data,
+  parameters.to.save = jags.parameters,
+  n.iter = 5000,
+  n.thin = 1, 
+  n.chains = 3,
+  n.burnin = 1000)
+```
+
+Siguiendo el modelo utiliando 5000 iteraciones, 3 cadenas y quemando las primeras 1000, se puede observar que cero pertenece al intervalo de la beta, por lo que no se rechaza la hipótesis nula, lo que implica que no existen diferencias entre las mediciones realizadas en papel o electrónicamente. 
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+out.dic<-jags.fit$BUGSoutput$DIC
+out<-jags.fit$BUGSoutput$sims.list
+out.sum<-jags.fit$BUGSoutput$summary
+
+data.frame(Beta1 = out$beta) %>% 
+  gather() %>% 
+  ggplot(aes(x = value, fill = key)) +
+  geom_histogram(alpha = .3) +
+  scale_fill_discrete(name = "Parámetro")
+```
+
+Además, se puede observar que los valores generales de glucosa como su varianza varían por paciente como se muestra en las gráficas siguientes. 
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+out.alpha<-out.sum[grep("alpha",rownames(out.sum)),]
+
+out.alpha %>% 
+  data.frame() %>% 
+  arrange(mean) %>% 
+  ggplot(aes(x = 1:70, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(x=1:70, ymin = X2.5., ymax=X97.5.))
+```
+
+```{r, warning=FALSE, message=FALSE, echo = FALSE}
+out.tau<-out.sum[grep("tau",rownames(out.sum)),]
+
+out.tau %>% 
+  data.frame() %>% 
+  arrange(mean) %>% 
+  ggplot(aes(x = 1:70, y = mean)) +
+  geom_point() +
+  geom_errorbar(aes(x=1:70, ymin = X2.5., ymax=X97.5.))
+```
 
 ## 2. ¿ Existe discrepancia entre las mediciones de glucosa de los pacientes entre las cuatro horas del día donde se miden?
 
