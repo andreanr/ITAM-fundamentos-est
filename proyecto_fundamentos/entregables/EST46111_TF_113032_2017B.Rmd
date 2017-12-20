@@ -723,7 +723,7 @@ inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
 parameters<-c("alpha","beta.adj", "yf1")
 
 mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
-               n.iter=30000,n.chains=1,n.burnin=3000, n.thin = 1)
+               n.iter=5000,n.chains=3,n.burnin=1000, n.thin = 1)
 ```
 
 + Gráfica observado vs ajustado
