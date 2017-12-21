@@ -671,7 +671,7 @@ out.dic
 ```{r,echo=FALSE}
 out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
 
-r2 <- cor(base_ingesta$medicion, out.yf[,1])^2
+r2 <- cor(base_ingesta$media_glu, out.yf[,1])^2
 r2
 ```
 
@@ -803,7 +803,7 @@ out.dic
 ```{r,echo=FALSE}
 out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
 
-r2 <- cor(base_ingesta$medicion, out.yf[,1])^2
+r2 <- cor(base_ingesta$media_glu, out.yf[,1])^2
 r2
 ```
 
