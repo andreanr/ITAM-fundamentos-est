@@ -1,12 +1,11 @@
 ---
 title: "Examen Final Fundamentos de Estadística"
 author: "Andrea Navarrete, Mariana Godina, Elizabeth Solis"
-output:
-  html_document: 
-    df_print: paged
-    highlight: tango
-    theme: spacelab
-    toc: yes
+output: rmarkdown::html_vignette
+vignette: >
+ %\VignetteIndexEntry{Vignette Title}
+ %\VignetteEngine{knitr::rmarkdown}
+ %\VignetteEncoding{UTF-8}
 ---
 
 ```{r options, echo = FALSE}
@@ -306,20 +305,21 @@ log(y_{it}) \sim N(\mu_{i}, \tau_{i}) \\
 $$
 
 Además:
+
 $$
 \alpha_{i} \sim N(0, 0.001) \\
 \tau_{i} \sim gamma(c_0, c_1) \\
 c0 \sim gamma(1, 1) \\
 c1 \sim gamma(1, 1) \\
 \beta_i \sim N(0, 0.001) \ ; \ i = 1,2,3,4
-
 $$
-donde:
-+ $\alpha_i$ es el nivel de glucosa de cada individuo *i*, i = 1,2, ..., 70
-+ $horario8am_{i}$ indica si la medición fue realizada en el desayuno  
-+ $horario12pm_{i}$ indica si la medición fue realizada en la comida  
-+ $horario18pm_{i}$ indica si la medición fue realizada en la cena  
-+ $horario22pm_{i}$ indica si la medición fue realizada al dormir  
+donde:  
+
++ $\alpha_i$ es el nivel de glucosa de cada individuo *i*, i = 1,2, ..., 70  
++ $horario8am_{i}$ indica si la medición fue realizada en el desayuno     
++ $horario12pm_{i}$ indica si la medición fue realizada en la comida     
++ $horario18pm_{i}$ indica si la medición fue realizada en la cena     
++ $horario22pm_{i}$ indica si la medición fue realizada al dormir      
 
 ```{r, echo=FALSE}
 modelo_horas <- '
@@ -665,15 +665,15 @@ out.dic<-mod.reg$BUGSoutput$DIC
 out.dic
 ```
 
-
 + R2
 
 ```{r,echo=FALSE}
 out.yf<-out.sum[grep("yf1",rownames(out.sum)),]
 
-r2 <- cor(base_ingesta$media_glu, out.yf[,1])^2
+r2 <- cor(base_ingesta$medicion, out.yf[,1])^2
 r2
 ```
+
 
 + Devianza
 
@@ -812,6 +812,14 @@ r2
 ```{r,echo=FALSE}
 mean(out$deviance)
 ```
+## Referencias bibliográficas
+
++ http://www.stats.ox.ac.uk/~nicholls/MScMCMC15/jags_user_manual.pdf   
+
++ Doing Bayesian Data Analysis, Second Edition, John K. Kruschke, AP. Bayesian Data Analysis, Andrew Gelman, John B. Carlin, Hal S. Stern and David B. Dunson.   
+
++ https://cran.r-project.org/web/packages/R2jags/R2jags.pdf
+
 
 ## Anexo
 
