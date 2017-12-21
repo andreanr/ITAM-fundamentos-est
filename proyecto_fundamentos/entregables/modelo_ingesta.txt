@@ -12,7 +12,7 @@ for (i in 1:n) {
 	}
 
 #Priors 
-for (i in 1:n_indv) {
+for (i in 1:n_indiv) {
 alpha[i] ~ dnorm(0,tau.a)
 }
 

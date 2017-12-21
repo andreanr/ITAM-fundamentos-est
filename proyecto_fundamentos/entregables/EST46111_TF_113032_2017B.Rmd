@@ -610,7 +610,7 @@ n <- nrow(base_ingesta)
 n_indiv <- base_ingesta$individual %>% 
   unique() %>% 
   length()
-data<-list("n"=n, "n_indv" = n_indiv, "y"=base_ingesta$medicion, "x" = base_ingesta$ingesta,
+data<-list("n"=n, "n_indiv" = n_indiv, "y"=base_ingesta$medicion, "x" = base_ingesta$ingesta,
            "indiv" = base_ingesta$individual)
 
 inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
@@ -715,15 +715,15 @@ n_indiv <- base_ingesta$individual %>%
 
 n <- nrow(base_ingesta)
 
-data<-list("n"=n, "n_indv" = n_indiv, "y"=base_ingesta$media_glu, "x" = base_ingesta$ingesta, 
+data<-list("n"=n, "n_indiv" = n_indiv, "y"=base_ingesta$media_glu, "x" = base_ingesta$ingesta, 
            "indiv" = base_ingesta$individual)
 
 inits<-function(){list(alpha = rep(0,n_indiv), beta = rep(0,2), yf1=rep(1,n))}
 
 parameters<-c("alpha","beta.adj", "yf1")
 
-mod.reg <-jags(data,inits,parameters,model.file="modelo_ingesta.txt",
-               n.iter=5000,n.chains=3,n.burnin=1000, n.thin = 1)
+mod.reg <-jags.parallel(data,inits,parameters,model.file="modelo_ingesta.txt",
+               n.iter=5000,n.chains=3,n.burnin=1000, n.thin = 1, n.cluster = 7)
 ```
 
 + Gráfica observado vs ajustado
@@ -916,7 +916,7 @@ for (i in 1:n) {
 	}
 
 #Priors 
-for (i in 1:n_indv) {
+for (i in 1:n_indiv) {
 alpha[i] ~ dnorm(0,tau.a)
 }
 
